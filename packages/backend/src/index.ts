@@ -7,6 +7,7 @@ import { auth } from './auth';
 import { ablyRoutes } from './routes/ably';
 import { preferencesRoutes } from './routes/preferences';
 import { usersRoutes } from './routes/users';
+import { roomsRoutes } from './routes/rooms';
 
 const app = new Hono();
 
@@ -33,6 +34,7 @@ app.on(['GET', 'POST'], '/api/auth/*', (c) => {
 app.route('/api/ably', ablyRoutes);
 app.route('/api/preferences', preferencesRoutes);
 app.route('/api/users', usersRoutes);
+app.route('/api/rooms', roomsRoutes);
 
 // Protected route example - get current user
 app.get('/api/me', async (c) => {

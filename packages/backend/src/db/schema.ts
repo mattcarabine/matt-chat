@@ -1,4 +1,5 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, unique } from 'drizzle-orm/sqlite-core';
+import { relations } from 'drizzle-orm';
 
 // User table - BetterAuth core + username plugin + custom fullName
 export const user = sqliteTable('user', {
@@ -73,3 +74,47 @@ export const userPreferences = sqliteTable('user_preferences', {
   createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull(),
 });
+
+// Rooms table - stores chat room metadata
+export const rooms = sqliteTable('rooms', {
+  id: text('id').primaryKey(),
+  slug: text('slug').notNull().unique(), // URL-friendly identifier (e.g., "landing-zone")
+  name: text('name').notNull(), // Display name
+  description: text('description'), // Optional description
+  createdBy: text('createdBy').references(() => user.id, { onDelete: 'set null' }),
+  isDefault: integer('isDefault', { mode: 'boolean' }).notNull().default(false),
+  isPublic: integer('isPublic', { mode: 'boolean' }).notNull().default(true), // For future private rooms
+  createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull(),
+});
+
+// Room members table - tracks which users have joined which rooms
+export const roomMembers = sqliteTable(
+  'room_members',
+  {
+    id: text('id').primaryKey(),
+    roomId: text('roomId')
+      .notNull()
+      .references(() => rooms.id, { onDelete: 'cascade' }),
+    userId: text('userId')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    joinedAt: integer('joinedAt', { mode: 'timestamp' }).notNull(),
+    // Future fields for moderation:
+    // role: text('role', { enum: ['member', 'moderator', 'admin'] }).notNull().default('member'),
+    // isMuted: integer('isMuted', { mode: 'boolean' }).notNull().default(false),
+    // mutedUntil: integer('mutedUntil', { mode: 'timestamp' }),
+  },
+  (table) => [unique().on(table.roomId, table.userId)]
+);
+
+// Relations for Drizzle query API
+export const roomsRelations = relations(rooms, ({ many, one }) => ({
+  members: many(roomMembers),
+  creator: one(user, { fields: [rooms.createdBy], references: [user.id] }),
+}));
+
+export const roomMembersRelations = relations(roomMembers, ({ one }) => ({
+  room: one(rooms, { fields: [roomMembers.roomId], references: [rooms.id] }),
+  user: one(user, { fields: [roomMembers.userId], references: [user.id] }),
+}));

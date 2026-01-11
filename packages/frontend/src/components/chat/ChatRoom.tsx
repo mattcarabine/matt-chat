@@ -4,14 +4,13 @@ import { MessageInput } from './MessageInput';
 import { PresenceList } from './PresenceList';
 import { TypingIndicator } from './TypingIndicator';
 import { ConnectionStatus } from './ConnectionStatus';
-import { ROOM_DISPLAY_NAMES, type RoomId } from '@app/shared';
 
 interface ChatRoomProps {
   roomId: string;
+  roomName: string;
 }
 
-export function ChatRoom({ roomId }: ChatRoomProps) {
-  const roomName = ROOM_DISPLAY_NAMES[roomId as RoomId] || roomId;
+export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
 
   return (
     <RoomProvider roomId={roomId}>
@@ -43,7 +42,7 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
 
         {/* Presence sidebar */}
         <div className="w-64 border-l border-stone-300/50 hidden lg:block">
-          <PresenceList />
+          <PresenceList roomSlug={roomId} />
         </div>
       </div>
     </RoomProvider>

@@ -27,12 +27,14 @@ Use code-simplifier to simplify any code you write before finishing.
 
 ```
 packages/backend/         # Hono API server (port 3000)
-  src/routes/             # Chat routes (ably, preferences, users)
+  src/routes/             # API routes (ably, preferences, users, rooms)
+  src/db/schema.ts        # Drizzle schema (rooms, roomMembers tables)
 packages/frontend/        # React app (port 5173)
-  src/components/chat/    # Chat UI components
-  src/hooks/useChat.ts    # Chat hooks (messages, presence, typing)
+  src/components/chat/    # Chat UI (ChatRoom, RoomSidebar, modals)
+  src/hooks/useChat.ts    # Ably hooks (messages, presence, typing)
+  src/hooks/useRooms.ts   # Room CRUD hooks (TanStack Query)
   src/providers/          # ChatProvider for Ably connection
-packages/shared/          # Shared Zod schemas (auth, chat)
+packages/shared/          # Shared Zod schemas (auth, chat, rooms)
 ```
 
 ## Commands
@@ -44,12 +46,13 @@ pnpm db:migrate   # Apply database migrations
 pnpm test:e2e     # Run Playwright E2E tests
 ```
 
-## Chat Feature
+## Chat Architecture
 
-- Single room "landing-zone" at `/chat/landing-zone` (URL-based routing for future multi-room)
-- Ably token auth via `/api/ably/token`
-- User display preference (fullName vs username) stored in `user_preferences` table
-- React hooks: `useChatMessages`, `useChatPresence`, `useChatTyping`
+- **Multi-room**: Users can create, join, and leave rooms. Room metadata in SQLite, messages in Ably (30-day retention)
+- **Default room**: "Landing Zone" - all users auto-join on signup via BetterAuth `databaseHooks`
+- **Room slug as Ably room ID**: `/chat/:slug` maps directly to Ably room
+- **History**: Uses `historyBeforeSubscribe()` for seamless backfill without message overlap
+- **Presence**: Shows online/offline members by cross-referencing Ably presence with room membership
 
 ## Environment
 

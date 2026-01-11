@@ -1,7 +1,10 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { username } from 'better-auth/plugins';
+import { nanoid } from 'nanoid';
+import { eq } from 'drizzle-orm';
 import { db } from '../db';
+import { rooms, roomMembers } from '../db/schema';
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -35,6 +38,28 @@ export const auth = betterAuth({
   trustedOrigins: [
     process.env.FRONTEND_URL || 'http://localhost:5173',
   ],
+
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          // Auto-join new users to the default room
+          const defaultRoom = await db.query.rooms.findFirst({
+            where: eq(rooms.isDefault, true),
+          });
+
+          if (defaultRoom) {
+            await db.insert(roomMembers).values({
+              id: nanoid(),
+              roomId: defaultRoom.id,
+              userId: user.id,
+              joinedAt: new Date(),
+            });
+          }
+        },
+      },
+    },
+  },
 });
 
 export type Auth = typeof auth;

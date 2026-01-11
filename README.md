@@ -90,6 +90,7 @@ Navigate to http://localhost:5173 in your browser.
 |---------|-------------|
 | `pnpm db:generate` | Generate Drizzle migrations |
 | `pnpm db:migrate` | Apply migrations to SQLite |
+| `pnpm db:seed` | Seed default room (run once after migrate) |
 | `pnpm db:studio` | Open Drizzle Studio GUI |
 
 ## Project Structure
@@ -144,11 +145,12 @@ Navigate to http://localhost:5173 in your browser.
 
 ## Chat Features
 
-Real-time chat powered by Ably Chat SDK:
+Real-time multi-room chat powered by Ably Chat SDK:
 
+- **Multi-room**: Create, join, and leave chat rooms
 - **Messaging**: Send and receive messages in real-time
-- **Message history**: Load previous messages when joining a room
-- **Presence**: See who's online in the chat room
+- **Message history**: Automatic backfill when joining rooms (30-day Ably retention)
+- **Presence**: See online and offline room members
 - **Typing indicators**: See when others are typing
 - **Display name preference**: Choose to show full name or username
 
@@ -157,7 +159,7 @@ Real-time chat powered by Ably Chat SDK:
 | Route | Description |
 |-------|-------------|
 | `/chat` | Redirects to `/chat/landing-zone` |
-| `/chat/:roomId` | Chat room (e.g., `/chat/landing-zone`) |
+| `/chat/:slug` | Chat room (e.g., `/chat/landing-zone`) |
 
 ## API Endpoints
 
@@ -181,6 +183,14 @@ Custom endpoints:
 | GET | `/api/preferences` | Get user preferences (protected) |
 | PUT | `/api/preferences` | Update user preferences (protected) |
 | GET | `/api/users/me/chat-info` | Get user's chat display info (protected) |
+| GET | `/api/rooms` | List user's joined rooms (protected) |
+| POST | `/api/rooms` | Create a new room (protected) |
+| GET | `/api/rooms/search?q=` | Search public rooms (protected) |
+| GET | `/api/rooms/:slug` | Get room details (protected) |
+| GET | `/api/rooms/:slug/members` | Get room members (protected) |
+| POST | `/api/rooms/:slug/join` | Join a room (protected) |
+| POST | `/api/rooms/:slug/leave` | Leave a room (protected) |
+| DELETE | `/api/rooms/:slug` | Delete a room (creator only) |
 
 ## Environment Variables
 

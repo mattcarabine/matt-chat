@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useSession, signOut, type User } from '@/lib/auth-client';
-import { ROOMS } from '@app/shared';
+import { DEFAULT_ROOM_SLUG } from '@app/shared';
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -123,7 +123,7 @@ export function DashboardPage() {
             </h3>
             <div className="space-y-2">
               <Link
-                to={`/chat/${ROOMS.LANDING_ZONE}`}
+                to={`/chat/${DEFAULT_ROOM_SLUG}`}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-charcoal hover:bg-forest/5 rounded-sm transition-colors duration-200"
               >
                 <svg className="w-5 h-5 text-stone" fill="none" viewBox="0 0 24 24" stroke="currentColor">

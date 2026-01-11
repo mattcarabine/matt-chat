@@ -61,7 +61,8 @@ export function useChatMessages() {
     });
   }, []);
 
-  const { sendMessage: ablySendMessage, history } = useMessages({
+  // Use historyBeforeSubscribe for seamless history backfill without message overlap
+  const { sendMessage: ablySendMessage, historyBeforeSubscribe } = useMessages({
     listener: handleMessage,
   });
 
@@ -70,13 +71,18 @@ export function useChatMessages() {
   }, []);
 
   useEffect(() => {
-    if (historyLoadedRef.current) return;
+    if (historyLoadedRef.current || !historyBeforeSubscribe) return;
 
     async function loadHistory(): Promise<void> {
+      // TypeScript guard - historyBeforeSubscribe is checked in the effect condition
+      if (!historyBeforeSubscribe) return;
+
       try {
         setIsLoading(true);
         historyLoadedRef.current = true;
-        const result = await history({ limit: 50 });
+        // historyBeforeSubscribe returns messages from before subscription
+        // This ensures continuous history without overlap with real-time messages
+        const result = await historyBeforeSubscribe({ limit: 50 });
         const formatted = result.items.map(formatMessage);
         // History comes in reverse order (newest first), so reverse it
         setLocalMessages(formatted.reverse());
@@ -87,7 +93,7 @@ export function useChatMessages() {
       }
     }
     loadHistory();
-  }, [history]);
+  }, [historyBeforeSubscribe]);
 
   const sendMessage = useCallback(
     async (text: string) => {

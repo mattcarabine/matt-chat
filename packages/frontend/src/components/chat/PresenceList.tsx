@@ -1,10 +1,18 @@
 import { useChatPresence } from '@/hooks/useChat';
+import { useRoomMembers } from '@/hooks/useRooms';
 import { PresenceItem } from './PresenceItem';
 import { useSession } from '@/lib/auth-client';
 
-export function PresenceList() {
-  const { users, isLoading } = useChatPresence();
+interface PresenceListProps {
+  roomSlug: string;
+}
+
+export function PresenceList({ roomSlug }: PresenceListProps) {
+  const { users: onlineUsers, isLoading: presenceLoading } = useChatPresence();
+  const { data: membersData, isLoading: membersLoading } = useRoomMembers(roomSlug);
   const { data: session } = useSession();
+
+  const isLoading = presenceLoading || membersLoading;
 
   if (isLoading) {
     return (
@@ -22,22 +30,57 @@ export function PresenceList() {
     );
   }
 
+  const members = membersData?.members ?? [];
+  const onlineUserIds = new Set(onlineUsers.map((u) => u.userId));
+
+  // Separate online and offline members
+  const onlineMembers = members.filter((m) => onlineUserIds.has(m.id));
+  const offlineMembers = members.filter((m) => !onlineUserIds.has(m.id));
+
   return (
     <div className="p-4">
+      {/* Online section */}
       <h3
-        className="text-sm font-medium text-stone uppercase tracking-wide mb-4"
+        className="text-sm font-medium text-stone uppercase tracking-wide mb-3"
         style={{ letterSpacing: '0.05em' }}
       >
-        Online ({users.length})
+        Online ({onlineMembers.length})
       </h3>
-      <div className="space-y-2">
-        {users.map((user) => (
-          <PresenceItem
-            key={user.clientId}
-            displayName={user.displayName}
-            isCurrentUser={user.userId === session?.user?.id}
-          />
-        ))}
+      <div className="space-y-1 mb-6">
+        {onlineMembers.length === 0 ? (
+          <p className="text-xs text-stone/60 italic">No one online</p>
+        ) : (
+          onlineMembers.map((member) => (
+            <PresenceItem
+              key={member.id}
+              displayName={member.displayName}
+              isCurrentUser={member.id === session?.user?.id}
+              isOnline
+            />
+          ))
+        )}
+      </div>
+
+      {/* Offline section */}
+      <h3
+        className="text-sm font-medium text-stone uppercase tracking-wide mb-3"
+        style={{ letterSpacing: '0.05em' }}
+      >
+        Offline ({offlineMembers.length})
+      </h3>
+      <div className="space-y-1">
+        {offlineMembers.length === 0 ? (
+          <p className="text-xs text-stone/60 italic">Everyone's online!</p>
+        ) : (
+          offlineMembers.map((member) => (
+            <PresenceItem
+              key={member.id}
+              displayName={member.displayName}
+              isCurrentUser={member.id === session?.user?.id}
+              isOnline={false}
+            />
+          ))
+        )}
       </div>
     </div>
   );

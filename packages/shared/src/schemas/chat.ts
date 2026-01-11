@@ -1,14 +1,59 @@
 import { z } from 'zod';
 
-// Predefined rooms
-export const ROOMS = {
-  LANDING_ZONE: 'landing-zone',
-} as const;
+// Default room slug constant
+export const DEFAULT_ROOM_SLUG = 'landing-zone';
 
-export type RoomId = (typeof ROOMS)[keyof typeof ROOMS];
+// Room slug validation (URL-friendly identifier)
+export const roomSlugSchema = z
+  .string()
+  .min(1)
+  .max(100)
+  .regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens');
 
-// Room ID validation
-export const roomIdSchema = z.string().min(1).max(100);
+// Room creation input schema
+export const createRoomInputSchema = z.object({
+  name: z.string().min(1).max(50).trim(),
+  description: z.string().max(500).optional(),
+});
+export type CreateRoomInput = z.infer<typeof createRoomInputSchema>;
+
+// Room response schema
+export const roomSchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+  isDefault: z.boolean(),
+  isPublic: z.boolean(),
+  memberCount: z.number(),
+  isMember: z.boolean().optional(),
+  isCreator: z.boolean().optional(),
+  createdAt: z.string(),
+});
+export type Room = z.infer<typeof roomSchema>;
+
+// Room list item (for user's joined rooms)
+export const roomListItemSchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+  isDefault: z.boolean(),
+  memberCount: z.number(),
+  joinedAt: z.string(),
+});
+export type RoomListItem = z.infer<typeof roomListItemSchema>;
+
+// Room search result
+export const roomSearchResultSchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+  memberCount: z.number(),
+  isMember: z.boolean(),
+});
+export type RoomSearchResult = z.infer<typeof roomSearchResultSchema>;
 
 // Display name preference
 export const displayNamePreferenceSchema = z.enum(['fullName', 'username']);
@@ -46,12 +91,27 @@ export const chatMessageSchema = z.object({
 });
 export type ChatMessage = z.infer<typeof chatMessageSchema>;
 
-// Room display names
+// ========================================
+// DEPRECATED - Use dynamic room lookup instead
+// ========================================
+
+/** @deprecated Use dynamic room lookup via /api/rooms instead */
+export const ROOMS = {
+  LANDING_ZONE: 'landing-zone',
+} as const;
+
+/** @deprecated Use dynamic room lookup via /api/rooms instead */
+export type RoomId = (typeof ROOMS)[keyof typeof ROOMS];
+
+/** @deprecated Use roomSlugSchema instead */
+export const roomIdSchema = z.string().min(1).max(100);
+
+/** @deprecated Use dynamic room lookup via /api/rooms/:slug instead */
 export const ROOM_DISPLAY_NAMES: Record<RoomId, string> = {
   [ROOMS.LANDING_ZONE]: 'Landing Zone',
 };
 
-// Helper to check if a room ID is valid
+/** @deprecated Room validation now happens via API calls */
 export function isValidRoomId(roomId: string): roomId is RoomId {
   return Object.values(ROOMS).includes(roomId as RoomId);
 }

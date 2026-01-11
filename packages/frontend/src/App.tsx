@@ -7,7 +7,7 @@ import { SignUpPage } from '@/pages/SignUpPage';
 import { SignInPage } from '@/pages/SignInPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { ChatPage } from '@/pages/ChatPage';
-import { ROOMS } from '@app/shared';
+import { DEFAULT_ROOM_SLUG } from '@app/shared';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,7 +51,7 @@ export function App() {
             />
             <Route
               path="/chat"
-              element={<Navigate to={`/chat/${ROOMS.LANDING_ZONE}`} replace />}
+              element={<Navigate to={`/chat/${DEFAULT_ROOM_SLUG}`} replace />}
             />
             <Route
               path="/chat/:roomId"

@@ -1,16 +1,21 @@
 interface PresenceItemProps {
   displayName: string;
   isCurrentUser: boolean;
+  isOnline?: boolean;
 }
 
-export function PresenceItem({ displayName, isCurrentUser }: PresenceItemProps) {
+export function PresenceItem({ displayName, isCurrentUser, isOnline = true }: PresenceItemProps) {
   return (
-    <div className="flex items-center gap-3 py-2">
+    <div className={`flex items-center gap-3 py-2 ${!isOnline ? 'opacity-50' : ''}`}>
       <div className="relative">
-        <div className="w-8 h-8 rounded-full bg-forest flex items-center justify-center text-cream text-sm font-serif">
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-serif ${
+          isOnline ? 'bg-forest text-cream' : 'bg-stone-300 text-stone'
+        }`}>
           {displayName.charAt(0).toUpperCase()}
         </div>
-        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-cream" />
+        <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-cream ${
+          isOnline ? 'bg-green-500' : 'bg-stone-400'
+        }`} />
       </div>
       <span
         className={`text-sm ${isCurrentUser ? 'font-medium text-charcoal' : 'text-stone'}`}

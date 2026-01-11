@@ -57,3 +57,19 @@ export const verification = sqliteTable('verification', {
   createdAt: integer('createdAt', { mode: 'timestamp' }),
   updatedAt: integer('updatedAt', { mode: 'timestamp' }),
 });
+
+// User preferences table - stores display and notification preferences
+export const userPreferences = sqliteTable('user_preferences', {
+  id: text('id').primaryKey(),
+  userId: text('userId')
+    .notNull()
+    .unique()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  displayNamePreference: text('displayNamePreference', {
+    enum: ['fullName', 'username'],
+  })
+    .notNull()
+    .default('fullName'),
+  createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull(),
+});

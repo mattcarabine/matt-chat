@@ -6,6 +6,7 @@ A production-ready TypeScript monorepo with React frontend, Hono backend, and Be
 
 - **Frontend**: Vite + React 18 + TypeScript + TailwindCSS + React Router + TanStack Query
 - **Backend**: Hono + BetterAuth + Drizzle ORM + SQLite
+- **Real-time**: Ably Chat SDK (messaging, presence, typing indicators)
 - **Shared**: Zod validation schemas
 - **Testing**: Vitest (unit) + Playwright (E2E)
 
@@ -44,7 +45,13 @@ PORT=3000
 BETTER_AUTH_SECRET=your-generated-secret-here
 BETTER_AUTH_URL=http://localhost:3000
 FRONTEND_URL=http://localhost:5173
+ABLY_API_KEY=your-ably-api-key
 ```
+
+To get an Ably API key:
+1. Create an account at [ably.com](https://ably.com)
+2. Create a new app in the Ably dashboard
+3. Copy the API key from the app's "API Keys" tab
 
 ### 3. Run database migrations
 
@@ -100,7 +107,10 @@ Navigate to http://localhost:5173 in your browser.
 │   ├── frontend/          # React application
 │   │   ├── src/
 │   │   │   ├── components/  # Reusable components
-│   │   │   ├── lib/         # Auth client, utilities
+│   │   │   │   └── chat/    # Chat UI components
+│   │   │   ├── hooks/       # React hooks (chat, preferences)
+│   │   │   ├── lib/         # Auth client, Ably client
+│   │   │   ├── providers/   # Context providers (ChatProvider)
 │   │   │   └── pages/       # Route pages
 │   │   └── index.html
 │   │
@@ -132,6 +142,23 @@ Navigate to http://localhost:5173 in your browser.
 
 - Minimum 8 characters
 
+## Chat Features
+
+Real-time chat powered by Ably Chat SDK:
+
+- **Messaging**: Send and receive messages in real-time
+- **Message history**: Load previous messages when joining a room
+- **Presence**: See who's online in the chat room
+- **Typing indicators**: See when others are typing
+- **Display name preference**: Choose to show full name or username
+
+### Routes
+
+| Route | Description |
+|-------|-------------|
+| `/chat` | Redirects to `/chat/landing-zone` |
+| `/chat/:roomId` | Chat room (e.g., `/chat/landing-zone`) |
+
 ## API Endpoints
 
 All auth endpoints are handled by BetterAuth at `/api/auth/*`:
@@ -150,6 +177,10 @@ Custom endpoints:
 |--------|----------|-------------|
 | GET | `/api/me` | Get current user (protected) |
 | GET | `/api/health` | Health check |
+| GET | `/api/ably/token` | Get Ably token for real-time (protected) |
+| GET | `/api/preferences` | Get user preferences (protected) |
+| PUT | `/api/preferences` | Update user preferences (protected) |
+| GET | `/api/users/me/chat-info` | Get user's chat display info (protected) |
 
 ## Environment Variables
 
@@ -161,6 +192,7 @@ Custom endpoints:
 | `BETTER_AUTH_SECRET` | Encryption secret (min 32 chars) | Required |
 | `BETTER_AUTH_URL` | Backend URL | `http://localhost:3000` |
 | `FRONTEND_URL` | Frontend URL for CORS | `http://localhost:5173` |
+| `ABLY_API_KEY` | Ably API key for real-time chat | Required for chat |
 
 ### Frontend
 

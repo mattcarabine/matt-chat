@@ -40,6 +40,8 @@ export function SignUpPage() {
 
     setIsSubmitting(true);
     try {
+      // Cast to any because BetterAuth client types don't include custom fields
+      // but the backend is configured to accept fullName
       const { error } = await signUp.email({
         email: formData.email,
         password: formData.password,
@@ -47,7 +49,7 @@ export function SignUpPage() {
         displayUsername: formData.username,
         name: formData.fullName,
         fullName: formData.fullName,
-      });
+      } as Parameters<typeof signUp.email>[0]);
 
       if (error) {
         setErrors({ form: error.message || 'Sign up failed' });

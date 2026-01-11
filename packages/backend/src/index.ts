@@ -1,8 +1,12 @@
+import 'dotenv/config';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { auth } from './auth';
+import { ablyRoutes } from './routes/ably';
+import { preferencesRoutes } from './routes/preferences';
+import { usersRoutes } from './routes/users';
 
 const app = new Hono();
 
@@ -24,6 +28,11 @@ app.use(
 app.on(['GET', 'POST'], '/api/auth/*', (c) => {
   return auth.handler(c.req.raw);
 });
+
+// Mount chat-related routes
+app.route('/api/ably', ablyRoutes);
+app.route('/api/preferences', preferencesRoutes);
+app.route('/api/users', usersRoutes);
 
 // Protected route example - get current user
 app.get('/api/me', async (c) => {

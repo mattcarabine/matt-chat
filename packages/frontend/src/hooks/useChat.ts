@@ -6,9 +6,12 @@ import {
   useTyping,
 } from '@ably/chat/react';
 import type { Message, PresenceMember } from '@ably/chat';
-import type { PresenceData, ChatMessage } from '@app/shared';
+import type { PresenceData, ChatMessage, MessageImage } from '@app/shared';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
+
+// Ably requires non-empty text, so we use this placeholder for image-only messages
+const IMAGE_ONLY_PLACEHOLDER = '\u200B'; // Zero-width space
 
 interface ChatUser {
   clientId: string;
@@ -96,16 +99,29 @@ export function useChatMessages() {
   }, [historyBeforeSubscribe]);
 
   const sendMessage = useCallback(
-    async (text: string) => {
+    async (text?: string, images?: MessageImage[]) => {
       if (!userInfo) {
         throw new Error('User info not loaded');
       }
+      // Must have either text or images
+      if (!text && (!images || images.length === 0)) {
+        throw new Error('Message must have text or images');
+      }
+
+      // Build metadata - only include images if present
+      const metadata = {
+        displayName: userInfo.displayName,
+        userId: userInfo.userId,
+        ...(images && images.length > 0 ? { images } : {}),
+      };
+
+      // Ably requires non-empty text, use placeholder for image-only messages
+      const messageText = text || (images && images.length > 0 ? IMAGE_ONLY_PLACEHOLDER : '');
+
       await ablySendMessage({
-        text,
-        metadata: {
-          displayName: userInfo.displayName,
-          userId: userInfo.userId,
-        },
+        text: messageText,
+        // Cast to satisfy Ably's JsonObject type - our images are serializable
+        metadata: metadata as Parameters<typeof ablySendMessage>[0]['metadata'],
       });
     },
     [ablySendMessage, userInfo]

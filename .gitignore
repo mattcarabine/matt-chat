@@ -16,6 +16,9 @@ build/
 *.db-journal
 packages/backend/data/
 
+# Uploads
+packages/backend/uploads/
+
 # IDE
 .idea/
 .vscode/

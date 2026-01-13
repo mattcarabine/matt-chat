@@ -8,6 +8,7 @@ import { ablyRoutes } from './routes/ably';
 import { preferencesRoutes } from './routes/preferences';
 import { usersRoutes } from './routes/users';
 import { roomsRoutes } from './routes/rooms';
+import { imagesRoutes } from './routes/images';
 
 const app = new Hono();
 
@@ -35,6 +36,7 @@ app.route('/api/ably', ablyRoutes);
 app.route('/api/preferences', preferencesRoutes);
 app.route('/api/users', usersRoutes);
 app.route('/api/rooms', roomsRoutes);
+app.route('/api', imagesRoutes); // Handles /api/rooms/:slug/images/* and /api/images/*
 
 // Protected route example - get current user
 app.get('/api/me', async (c) => {

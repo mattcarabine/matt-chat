@@ -108,13 +108,36 @@ export const roomMembers = sqliteTable(
   (table) => [unique().on(table.roomId, table.userId)]
 );
 
+// Uploaded images table - tracks images uploaded to chat
+export const uploadedImages = sqliteTable('uploaded_images', {
+  id: text('id').primaryKey(), // Same as storage key
+  roomId: text('roomId')
+    .notNull()
+    .references(() => rooms.id, { onDelete: 'cascade' }),
+  uploaderId: text('uploaderId')
+    .notNull()
+    .references(() => user.id, { onDelete: 'set null' }),
+  originalName: text('originalName').notNull(),
+  mimeType: text('mimeType').notNull(),
+  sizeBytes: integer('sizeBytes').notNull(),
+  width: integer('width'),
+  height: integer('height'),
+  uploadedAt: integer('uploadedAt', { mode: 'timestamp' }).notNull(),
+});
+
 // Relations for Drizzle query API
 export const roomsRelations = relations(rooms, ({ many, one }) => ({
   members: many(roomMembers),
   creator: one(user, { fields: [rooms.createdBy], references: [user.id] }),
+  images: many(uploadedImages),
 }));
 
 export const roomMembersRelations = relations(roomMembers, ({ one }) => ({
   room: one(rooms, { fields: [roomMembers.roomId], references: [rooms.id] }),
   user: one(user, { fields: [roomMembers.userId], references: [user.id] }),
+}));
+
+export const uploadedImagesRelations = relations(uploadedImages, ({ one }) => ({
+  room: one(rooms, { fields: [uploadedImages.roomId], references: [rooms.id] }),
+  uploader: one(user, { fields: [uploadedImages.uploaderId], references: [user.id] }),
 }));

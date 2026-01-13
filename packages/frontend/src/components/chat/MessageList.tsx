@@ -3,7 +3,11 @@ import { useChatMessages } from '@/hooks/useChat';
 import { MessageItem } from './MessageItem';
 import { useSession } from '@/lib/auth-client';
 
-export function MessageList() {
+interface MessageListProps {
+  roomSlug: string;
+}
+
+export function MessageList({ roomSlug }: MessageListProps) {
   const { messages, isLoading, error } = useChatMessages();
   const { data: session } = useSession();
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -54,6 +58,7 @@ export function MessageList() {
             message={message}
             isOwn={isOwn}
             showAvatar={showAvatar}
+            roomSlug={roomSlug}
           />
         );
       })}

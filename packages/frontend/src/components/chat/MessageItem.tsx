@@ -1,18 +1,28 @@
 import type { ChatMessage } from '@app/shared';
+import { MessageImages } from './MessageImages';
+
+// Placeholder used for image-only messages (Ably requires non-empty text)
+const IMAGE_ONLY_PLACEHOLDER = '\u200B';
 
 interface MessageItemProps {
   message: ChatMessage;
   isOwn: boolean;
   showAvatar: boolean;
+  roomSlug: string;
 }
 
-export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
+export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageItemProps) {
   const displayName = message.metadata?.displayName || 'Anonymous';
   const timestamp = new Date(message.timestamp);
   const timeString = timestamp.toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit',
   });
+  const images = message.metadata?.images;
+  // Filter out the placeholder text used for image-only messages
+  const textContent = message.text === IMAGE_ONLY_PLACEHOLDER ? '' : message.text;
+  const hasText = textContent && textContent.trim().length > 0;
+  const hasImages = images && images.length > 0;
 
   return (
     <div className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`}>
@@ -41,17 +51,26 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
             <span className="text-xs text-stone-400">{timeString}</span>
           </div>
         )}
-        <div
-          className={`px-4 py-2 rounded-2xl ${
-            isOwn
-              ? 'bg-forest text-cream rounded-tr-sm'
-              : 'bg-cream-dark text-charcoal rounded-tl-sm'
-          }`}
-        >
-          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-            {message.text}
-          </p>
-        </div>
+
+        {/* Text bubble */}
+        {hasText && (
+          <div
+            className={`px-4 py-2 rounded-2xl ${
+              isOwn
+                ? 'bg-forest text-cream rounded-tr-sm'
+                : 'bg-cream-dark text-charcoal rounded-tl-sm'
+            }`}
+          >
+            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+              {textContent}
+            </p>
+          </div>
+        )}
+
+        {/* Images */}
+        {hasImages && (
+          <MessageImages images={images} roomSlug={roomSlug} />
+        )}
       </div>
     </div>
   );

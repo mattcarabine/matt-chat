@@ -73,19 +73,31 @@ export const presenceDataSchema = z.object({
 });
 export type PresenceData = z.infer<typeof presenceDataSchema>;
 
+// Image attachment in a message
+export const messageImageSchema = z.object({
+  key: z.string(),
+  originalName: z.string(),
+  mimeType: z.string(),
+  width: z.number().optional(),
+  height: z.number().optional(),
+});
+export type MessageImage = z.infer<typeof messageImageSchema>;
+
 // Chat message metadata
 export const chatMessageMetadataSchema = z.object({
   displayName: z.string(),
   userId: z.string(),
+  images: z.array(messageImageSchema).optional(),
 });
 export type ChatMessageMetadata = z.infer<typeof chatMessageMetadataSchema>;
 
 // Chat message schema (matches Ably Chat message structure)
+// Text is optional when images are present
 export const chatMessageSchema = z.object({
   id: z.string(),
   roomId: z.string(),
   clientId: z.string(),
-  text: z.string().min(1).max(2000),
+  text: z.string().max(2000).optional(),
   timestamp: z.number(),
   metadata: chatMessageMetadataSchema.optional(),
 });

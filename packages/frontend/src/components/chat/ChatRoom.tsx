@@ -28,7 +28,7 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
 
           {/* Messages */}
           <div className="flex-1 overflow-hidden">
-            <MessageList />
+            <MessageList roomSlug={roomId} />
           </div>
 
           {/* Typing indicator */}
@@ -36,7 +36,7 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
 
           {/* Input */}
           <div className="border-t border-stone-300/50">
-            <MessageInput />
+            <MessageInput roomSlug={roomId} />
           </div>
         </div>
 

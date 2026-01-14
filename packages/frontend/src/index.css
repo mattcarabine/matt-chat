@@ -1,37 +1,108 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Sora:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Light theme (default) */
 :root {
-  --color-cream: #FAF8F5;
-  --color-cream-dark: #F2EDE6;
-  --color-forest: #1D3D2D;
-  --color-forest-light: #2A5A3F;
-  --color-terracotta: #C67B5C;
-  --color-terracotta-light: #D4967D;
-  --color-charcoal: #2C2C2C;
-  --color-stone: #6B6B6B;
-  --color-error: #B54A4A;
+  --color-bg: #FAFAF9;
+  --color-bg-secondary: #F5F5F4;
+  --color-bg-tertiary: #E7E5E4;
+  --color-text: #1C1917;
+  --color-text-secondary: #57534E;
+  --color-text-muted: #78716C;
+  --color-border: #D6D3D1;
+  --color-border-subtle: #E7E5E4;
+
+  /* Primary accent - ember orange */
+  --color-primary: #EA580C;
+  --color-primary-hover: #F97316;
+  --color-primary-muted: #FB923C;
+  --color-primary-bg: #FFF7ED;
+
+  /* Glass effect */
+  --glass-bg: rgba(250, 250, 249, 0.8);
+  --glass-border: rgba(214, 211, 209, 0.5);
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+
+  /* Error states */
+  --color-error: #DC2626;
   --color-error-bg: #FEF2F2;
+
+  /* Legacy compatibility */
+  --color-cream: #FAFAF9;
+  --color-cream-dark: #F5F5F4;
+  --color-forest: #EA580C;
+  --color-forest-light: #F97316;
+  --color-terracotta: #EA580C;
+  --color-terracotta-light: #FB923C;
+  --color-charcoal: #1C1917;
+  --color-stone: #78716C;
+}
+
+/* Dark theme */
+.dark {
+  --color-bg: #0C0A09;
+  --color-bg-secondary: #1C1917;
+  --color-bg-tertiary: #292524;
+  --color-text: #FAFAF9;
+  --color-text-secondary: #D6D3D1;
+  --color-text-muted: #A8A29E;
+  --color-border: #44403C;
+  --color-border-subtle: #292524;
+
+  /* Primary accent stays vibrant in dark */
+  --color-primary: #F97316;
+  --color-primary-hover: #FB923C;
+  --color-primary-muted: #EA580C;
+  --color-primary-bg: rgba(249, 115, 22, 0.1);
+
+  /* Glass effect - darker, more translucent */
+  --glass-bg: rgba(28, 25, 23, 0.85);
+  --glass-border: rgba(68, 64, 60, 0.6);
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+
+  /* Error states */
+  --color-error: #EF4444;
+  --color-error-bg: rgba(239, 68, 68, 0.1);
+
+  /* Legacy compatibility */
+  --color-cream: #0C0A09;
+  --color-cream-dark: #1C1917;
+  --color-forest: #F97316;
+  --color-forest-light: #FB923C;
+  --color-charcoal: #FAFAF9;
 }
 
 @layer base {
   html {
     font-family: 'DM Sans', system-ui, sans-serif;
-    background-color: var(--color-cream);
-    color: var(--color-charcoal);
+    background-color: var(--color-bg);
+    color: var(--color-text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   body {
     min-height: 100vh;
+    background-color: var(--color-bg);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Subtle noise texture for light mode only */
+  :root body {
     background:
       url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"),
-      var(--color-cream);
+      var(--color-bg);
     background-blend-mode: overlay;
+  }
+
+  /* Dark mode gets a subtle gradient instead */
+  .dark body {
+    background:
+      radial-gradient(ellipse at top, rgba(249, 115, 22, 0.03) 0%, transparent 50%),
+      var(--color-bg);
   }
 }
 
@@ -40,15 +111,38 @@
     font-family: 'Instrument Serif', Georgia, serif;
   }
 
+  .font-display {
+    font-family: 'Sora', 'DM Sans', system-ui, sans-serif;
+  }
+
+  /* Glass effect component */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-subtle {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
   .auth-input {
-    @apply w-full px-0 py-3 bg-transparent border-0 border-b-2 border-stone-300
-           text-charcoal text-lg placeholder:text-stone-400
-           focus:outline-none focus:border-forest
-           transition-all duration-300 ease-out;
+    @apply w-full px-0 py-3 bg-transparent border-0 border-b-2 text-lg transition-all duration-300 ease-out;
+    border-color: var(--color-border);
+    color: var(--color-text);
+  }
+
+  .auth-input::placeholder {
+    color: var(--color-text-muted);
   }
 
   .auth-input:focus {
-    border-color: var(--color-forest);
+    outline: none;
+    border-color: var(--color-primary);
   }
 
   .auth-input.has-error {
@@ -56,14 +150,15 @@
   }
 
   .auth-label {
-    @apply block text-sm font-medium text-stone tracking-wide uppercase mb-1;
+    @apply block text-sm font-medium tracking-wide uppercase mb-1;
+    color: var(--color-text-muted);
     letter-spacing: 0.08em;
   }
 
   .auth-button {
-    @apply relative w-full py-4 px-8 text-cream font-medium text-base tracking-wide
-           overflow-hidden transition-all duration-500 ease-out;
-    background-color: var(--color-forest);
+    @apply relative w-full py-4 px-8 font-medium text-base tracking-wide
+           overflow-hidden transition-all duration-500 ease-out text-white;
+    background-color: var(--color-primary);
   }
 
   .auth-button::before {
@@ -73,7 +168,7 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: var(--color-forest-light);
+    background: var(--color-primary-hover);
     transition: left 0.5s ease-out;
   }
 
@@ -96,7 +191,8 @@
   }
 
   .auth-link {
-    @apply text-forest font-medium relative;
+    @apply font-medium relative;
+    color: var(--color-primary);
   }
 
   .auth-link::after {
@@ -106,7 +202,7 @@
     left: 0;
     width: 0;
     height: 1px;
-    background-color: var(--color-forest);
+    background-color: var(--color-primary);
     transition: width 0.3s ease-out;
   }
 

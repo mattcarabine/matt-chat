@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { GuestRoute } from '@/components/GuestRoute';
 import { ChatProvider } from '@/providers/ChatProvider';
+import { ThemeProvider } from '@/providers/ThemeProvider';
 import { SignUpPage } from '@/pages/SignUpPage';
 import { SignInPage } from '@/pages/SignInPage';
 import { ChatPage } from '@/pages/ChatPage';
@@ -20,62 +21,64 @@ const queryClient = new QueryClient({
 
 export function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ChatProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Navigate to="/chat" replace />} />
-            <Route
-              path="/signup"
-              element={
-                <GuestRoute>
-                  <SignUpPage />
-                </GuestRoute>
-              }
-            />
-            <Route
-              path="/signin"
-              element={
-                <GuestRoute>
-                  <SignInPage />
-                </GuestRoute>
-              }
-            />
-            <Route
-              path="/invitations"
-              element={
-                <ProtectedRoute>
-                  <InvitationsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/chat"
-              element={
-                <ProtectedRoute>
-                  <ChatPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/chat/:roomId"
-              element={
-                <ProtectedRoute>
-                  <ChatPage />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </BrowserRouter>
-      </ChatProvider>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ChatProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Navigate to="/chat" replace />} />
+              <Route
+                path="/signup"
+                element={
+                  <GuestRoute>
+                    <SignUpPage />
+                  </GuestRoute>
+                }
+              />
+              <Route
+                path="/signin"
+                element={
+                  <GuestRoute>
+                    <SignInPage />
+                  </GuestRoute>
+                }
+              />
+              <Route
+                path="/invitations"
+                element={
+                  <ProtectedRoute>
+                    <InvitationsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/chat"
+                element={
+                  <ProtectedRoute>
+                    <ChatPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/chat/:roomId"
+                element={
+                  <ProtectedRoute>
+                    <ChatPage />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </BrowserRouter>
+        </ChatProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

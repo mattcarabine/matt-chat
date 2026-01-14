@@ -8,10 +8,10 @@ import { getLastRoom, setLastRoom } from '@/hooks/useLastRoom';
 
 function LoadingScreen({ message = 'Loading...' }: { message?: string }): JSX.Element {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cream">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="flex items-center gap-3">
-        <SpinnerIcon className="w-6 h-6 border-forest border-t-transparent" />
-        <span className="text-stone">{message}</span>
+        <SpinnerIcon className="w-6 h-6 border-ember-500 border-t-transparent" />
+        <span className="text-sand-500 dark:text-sand-400">{message}</span>
       </div>
     </div>
   );
@@ -55,7 +55,7 @@ export function ChatPage(): JSX.Element {
 
   if (!roomId && myRoomsData?.rooms.length === 0) {
     return (
-      <div className="h-screen flex flex-col">
+      <div className="h-screen flex flex-col pt-14">
         <NavBar currentSection="chat" />
         <div className="flex-1 flex">
           <RoomSidebar
@@ -135,7 +135,7 @@ export function ChatPage(): JSX.Element {
   };
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col pt-14">
       <NavBar currentSection="chat" />
 
       <div className="flex-1 flex overflow-hidden">

@@ -1,4 +1,4 @@
-# Auth Scaffold
+# MattChat
 
 TypeScript monorepo with authentication and real-time chat using pnpm workspaces.
 
@@ -101,3 +101,32 @@ myRoutes.get('/example', async (c) => {
 ## Environment
 
 Backend requires `ABLY_API_KEY` in `.env`.
+
+## Visual Design
+
+**Brand**: MattChat - warm, modern chat application with distinctive orange accent
+
+**Color Palette**:
+- Primary accent: Ember orange (`ember-500: #F97316`, `ember-600: #EA580C`)
+- Neutrals: Sand palette (warm grays from `sand-50: #FAFAF9` to `sand-950: #0C0A09`)
+- Deliberately avoids blue/purple to differentiate from "AI slop" aesthetics
+
+**Typography**:
+- Display/Logo: Sora (font-display)
+- Body: DM Sans (font-sans)
+- Decorative: Instrument Serif (font-serif)
+
+**Theme Support**:
+- Light, Dark, and System (auto-detect) themes
+- Default: System preference
+- Toggle in user dropdown menu
+- Uses CSS variables in `:root` and `.dark` classes
+- Controlled via `ThemeProvider` in `providers/ThemeProvider.tsx`
+
+**Design System**:
+- Glassmorphism: `.glass` class for frosted glass effect with backdrop-blur
+- Fixed navbar with glass effect, sticky to top
+- Orange gradient avatar buttons
+- Rounded corners (lg for cards/dropdowns, full for avatars/badges)
+
+**Logo**: Two overlapping chat bubbles at slight angles forming an abstract conversational "M" shape, rendered in `components/MattChatLogo.tsx`

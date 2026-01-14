@@ -108,7 +108,7 @@ export function InvitationsPage() {
   const invitations = data?.invitations ?? [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream">
+    <div className="min-h-screen flex flex-col pt-14">
       <NavBar currentSection="invitations" />
 
       <main className="flex-1 max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">

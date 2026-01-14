@@ -91,12 +91,11 @@ export function useMyRooms() {
   });
 }
 
-// Hook to search for rooms
+// Hook to search for rooms or get popular rooms (when query is empty)
 export function useRoomSearch(query: string) {
   return useQuery({
     queryKey: ['roomSearch', query],
     queryFn: () => searchRooms(query),
-    enabled: query.length >= 1,
   });
 }
 

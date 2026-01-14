@@ -144,30 +144,31 @@ export function BrowseRoomsModal({ isOpen, onClose }: BrowseRoomsModalProps) {
           {isLoading ? (
             <div className="px-6 py-8 text-center">
               <div className="w-6 h-6 border-2 border-forest border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-sm text-stone mt-3">Searching...</p>
+              <p className="text-sm text-stone mt-3">{searchQuery ? 'Searching...' : 'Loading popular rooms...'}</p>
             </div>
-          ) : searchQuery.length === 0 ? (
-            <EmptyState
-              icon={<SearchIcon className="w-6 h-6 text-stone" />}
-              title="Search for rooms"
-              subtitle="Start typing to find public rooms to join"
-            />
           ) : rooms.length === 0 ? (
             <EmptyState
               icon={<InfoIcon className="w-6 h-6 text-stone" />}
-              title="No rooms found"
-              subtitle="Try a different search term"
+              title={searchQuery ? 'No rooms found' : 'No rooms available'}
+              subtitle={searchQuery ? 'Try a different search term' : 'All rooms have been joined or none exist yet'}
             />
           ) : (
-            <div className="divide-y divide-stone-300/30">
-              {rooms.map((room) => (
-                <RoomSearchItem
-                  key={room.id}
-                  room={room}
-                  onJoin={handleJoin}
-                  isJoining={isJoining && joiningSlug === room.slug}
-                />
-              ))}
+            <div>
+              {!searchQuery && (
+                <div className="px-4 py-2 bg-cream-dark/30 border-b border-stone-300/30">
+                  <p className="text-xs font-medium text-stone uppercase tracking-wide">Popular Rooms</p>
+                </div>
+              )}
+              <div className="divide-y divide-stone-300/30">
+                {rooms.map((room) => (
+                  <RoomSearchItem
+                    key={room.id}
+                    room={room}
+                    onJoin={handleJoin}
+                    isJoining={isJoining && joiningSlug === room.slug}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </div>

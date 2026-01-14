@@ -5,10 +5,9 @@ import { GuestRoute } from '@/components/GuestRoute';
 import { ChatProvider } from '@/providers/ChatProvider';
 import { SignUpPage } from '@/pages/SignUpPage';
 import { SignInPage } from '@/pages/SignInPage';
-import { DashboardPage } from '@/pages/DashboardPage';
 import { ChatPage } from '@/pages/ChatPage';
 import { InvitationsPage } from '@/pages/InvitationsPage';
-import { DEFAULT_ROOM_SLUG } from '@app/shared';
+import { ProfilePage } from '@/pages/ProfilePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,7 +24,7 @@ export function App() {
       <ChatProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/chat" replace />} />
             <Route
               path="/signup"
               element={
@@ -43,14 +42,6 @@ export function App() {
               }
             />
             <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/invitations"
               element={
                 <ProtectedRoute>
@@ -59,8 +50,20 @@ export function App() {
               }
             />
             <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/chat"
-              element={<Navigate to={`/chat/${DEFAULT_ROOM_SLUG}`} replace />}
+              element={
+                <ProtectedRoute>
+                  <ChatPage />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="/chat/:roomId"

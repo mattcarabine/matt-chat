@@ -8,7 +8,7 @@ interface GuestRouteProps {
 
 export function GuestRoute({
   children,
-  redirectTo = '/dashboard',
+  redirectTo = '/chat',
 }: GuestRouteProps) {
   const { data: session, isPending } = useSession();
 

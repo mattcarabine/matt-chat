@@ -1,17 +1,23 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
 // Generate unique identifiers for each test run
 const uniqueId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
 // Helper to create a user and navigate to chat
-async function createUserAndSignIn(page: any, name: string, id: string) {
+async function createUserAndSignIn(page: Page, name: string, id: string) {
   await page.goto('/signup');
   await page.getByTestId('signup-fullname').fill(name);
   await page.getByTestId('signup-username').fill(`user${id}`);
   await page.getByTestId('signup-email').fill(`user${id}@e2e-test.local`);
   await page.getByTestId('signup-password').fill('password123');
   await page.getByTestId('signup-submit').click();
-  await expect(page).toHaveURL('/dashboard');
+  await expect(page).toHaveURL(/\/chat\//);
+}
+
+// Helper to sign out via dropdown menu
+async function signOut(page: Page) {
+  await page.getByTestId('user-menu-button').click();
+  await page.getByTestId('signout-button').click();
 }
 
 test.describe('Private Rooms', () => {
@@ -52,8 +58,8 @@ test.describe('Private Rooms', () => {
       // Should navigate to the new room
       await expect(page).toHaveURL(/\/chat\/private-room-/);
 
-      // Room should show with lock icon in sidebar (we can check for the room name)
-      await expect(page.locator('text=Private Room')).toBeVisible();
+      // Room should show with lock icon in sidebar (check header in chat area)
+      await expect(page.locator('h2:has-text("Private Room")')).toBeVisible();
     });
 
     test('private room does not appear in search results', async ({ page }) => {
@@ -68,8 +74,8 @@ test.describe('Private Rooms', () => {
       await page.click('button:has-text("Create Room")');
       await expect(page).toHaveURL(/\/chat\/secret-room-/);
 
-      // Sign out
-      await page.click('[data-testid="signout-button"]');
+      // Sign out via dropdown
+      await signOut(page);
       await expect(page).toHaveURL('/signin');
 
       // Create another user

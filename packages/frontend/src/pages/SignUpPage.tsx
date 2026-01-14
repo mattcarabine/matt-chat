@@ -56,7 +56,7 @@ export function SignUpPage() {
         return;
       }
 
-      navigate('/dashboard');
+      navigate('/chat');
     } catch {
       setErrors({ form: 'An unexpected error occurred' });
     } finally {

@@ -54,6 +54,12 @@ pnpm test:e2e     # Run Playwright E2E tests
 - **History**: Uses `historyBeforeSubscribe()` for seamless backfill without message overlap
 - **Presence**: Shows online/offline members by cross-referencing Ably presence with room membership
 
+## E2E Testing
+
+- **Test user email domain**: All e2e test users use `@e2e-test.local` emails to distinguish them from real users
+- **e2e_mode cookie**: Tests set an `e2e_mode=true` cookie so the backend includes test users in API responses (e.g., room member lists)
+- **Production filtering**: Without the cookie, the backend filters out `@e2e-test.local` users at the database level, keeping test data hidden from real users
+
 ## Environment
 
 Backend requires `ABLY_API_KEY` in `.env`.

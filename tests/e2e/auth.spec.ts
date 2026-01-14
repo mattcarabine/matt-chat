@@ -4,6 +4,18 @@ import { test, expect } from '@playwright/test';
 const uniqueId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
 test.describe('Authentication Flow', () => {
+  // Set e2e_mode cookie so backend includes test users in member lists
+  test.beforeEach(async ({ context }) => {
+    await context.addCookies([
+      {
+        name: 'e2e_mode',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
+  });
+
   test.describe('Sign Up', () => {
     test('allows user to create an account and redirects to dashboard', async ({ page }) => {
       const id = uniqueId();
@@ -13,7 +25,7 @@ test.describe('Authentication Flow', () => {
       // Fill out the form
       await page.getByTestId('signup-fullname').fill('Test User');
       await page.getByTestId('signup-username').fill(`testuser${id}`);
-      await page.getByTestId('signup-email').fill(`test${id}@example.com`);
+      await page.getByTestId('signup-email').fill(`test${id}@e2e-test.local`);
       await page.getByTestId('signup-password').fill('password123');
 
       // Submit
@@ -32,7 +44,7 @@ test.describe('Authentication Flow', () => {
       // Fill with data that passes HTML5 validation but fails Zod validation
       await page.getByTestId('signup-fullname').fill('Test');
       await page.getByTestId('signup-username').fill('ab'); // Too short (min 3)
-      await page.getByTestId('signup-email').fill('test@example.com');
+      await page.getByTestId('signup-email').fill('test@e2e-test.local');
       await page.getByTestId('signup-password').fill('short'); // Too short (min 8)
 
       // Submit
@@ -47,7 +59,7 @@ test.describe('Authentication Flow', () => {
 
     test('shows error for duplicate email', async ({ page }) => {
       const id = uniqueId();
-      const email = `duplicate${id}@example.com`;
+      const email = `duplicate${id}@e2e-test.local`;
 
       // First signup
       await page.goto('/signup');
@@ -82,7 +94,7 @@ test.describe('Authentication Flow', () => {
       await page.goto('/signup');
       await page.getByTestId('signup-fullname').fill('First User');
       await page.getByTestId('signup-username').fill(username);
-      await page.getByTestId('signup-email').fill(`first${id}@example.com`);
+      await page.getByTestId('signup-email').fill(`first${id}@e2e-test.local`);
       await page.getByTestId('signup-password').fill('password123');
       await page.getByTestId('signup-submit').click();
       await expect(page).toHaveURL('/dashboard');
@@ -95,7 +107,7 @@ test.describe('Authentication Flow', () => {
       await page.goto('/signup');
       await page.getByTestId('signup-fullname').fill('Second User');
       await page.getByTestId('signup-username').fill(username.toLowerCase());
-      await page.getByTestId('signup-email').fill(`second${id}@example.com`);
+      await page.getByTestId('signup-email').fill(`second${id}@e2e-test.local`);
       await page.getByTestId('signup-password').fill('password123');
       await page.getByTestId('signup-submit').click();
 
@@ -113,7 +125,7 @@ test.describe('Authentication Flow', () => {
       await page.goto('/signup');
       await page.getByTestId('signup-fullname').fill('Username Test');
       await page.getByTestId('signup-username').fill(username);
-      await page.getByTestId('signup-email').fill(`${username}@example.com`);
+      await page.getByTestId('signup-email').fill(`${username}@e2e-test.local`);
       await page.getByTestId('signup-password').fill('password123');
       await page.getByTestId('signup-submit').click();
       await expect(page).toHaveURL('/dashboard');
@@ -134,7 +146,7 @@ test.describe('Authentication Flow', () => {
 
     test('allows user to sign in with email', async ({ page }) => {
       const id = uniqueId();
-      const email = `emailtest${id}@example.com`;
+      const email = `emailtest${id}@e2e-test.local`;
 
       // First create an account
       await page.goto('/signup');
@@ -189,7 +201,7 @@ test.describe('Authentication Flow', () => {
       await page.goto('/signup');
       await page.getByTestId('signup-fullname').fill('Redirect Test');
       await page.getByTestId('signup-username').fill(`redirect${id}`);
-      await page.getByTestId('signup-email').fill(`redirect${id}@example.com`);
+      await page.getByTestId('signup-email').fill(`redirect${id}@e2e-test.local`);
       await page.getByTestId('signup-password').fill('password123');
       await page.getByTestId('signup-submit').click();
       await expect(page).toHaveURL('/dashboard');
@@ -210,7 +222,7 @@ test.describe('Authentication Flow', () => {
       await page.goto('/signup');
       await page.getByTestId('signup-fullname').fill('Signout Test');
       await page.getByTestId('signup-username').fill(`signout${id}`);
-      await page.getByTestId('signup-email').fill(`signout${id}@example.com`);
+      await page.getByTestId('signup-email').fill(`signout${id}@e2e-test.local`);
       await page.getByTestId('signup-password').fill('password123');
       await page.getByTestId('signup-submit').click();
       await expect(page).toHaveURL('/dashboard');

@@ -1,11 +1,12 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
-import { eq, and, sql, count } from 'drizzle-orm';
+import { getCookie } from 'hono/cookie';
+import { eq, and, sql, count, not, like } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 import { auth } from '../auth';
 import { db } from '../db';
-import { rooms, roomMembers } from '../db/schema';
+import { rooms, roomMembers, user } from '../db/schema';
 
 export const roomsRoutes = new Hono();
 
@@ -244,17 +245,30 @@ roomsRoutes.get('/:slug/members', async (c) => {
     return c.json({ error: 'Room not found' }, 404);
   }
 
-  const memberships = await db.query.roomMembers.findMany({
-    where: eq(roomMembers.roomId, room.id),
-    with: {
-      user: true,
-    },
-  });
+  // In e2e test mode (cookie set), include test users; otherwise filter them out
+  const isE2eMode = getCookie(c, 'e2e_mode') === 'true';
+
+  const memberships = await db
+    .select({
+      userId: roomMembers.userId,
+      joinedAt: roomMembers.joinedAt,
+      fullName: user.fullName,
+      name: user.name,
+      displayUsername: user.displayUsername,
+      username: user.username,
+    })
+    .from(roomMembers)
+    .innerJoin(user, eq(roomMembers.userId, user.id))
+    .where(
+      isE2eMode
+        ? eq(roomMembers.roomId, room.id)
+        : and(eq(roomMembers.roomId, room.id), not(like(user.email, '%@e2e-test.local')))
+    );
 
   const members = memberships.map((m) => ({
     id: m.userId,
-    displayName: m.user.fullName || m.user.name || 'Anonymous',
-    username: m.user.displayUsername || m.user.username,
+    displayName: m.fullName || m.name || 'Anonymous',
+    username: m.displayUsername || m.username,
     joinedAt: m.joinedAt.toISOString(),
   }));
 

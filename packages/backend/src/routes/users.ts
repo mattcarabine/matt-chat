@@ -1,31 +1,28 @@
 import { Hono } from 'hono';
 import { getCookie } from 'hono/cookie';
-import { eq, or, like, not, and } from 'drizzle-orm';
-import { auth } from '../auth';
+import { and, eq, like, not, or } from 'drizzle-orm';
 import { db } from '../db';
-import { userPreferences, user } from '../db/schema';
+import { user, userPreferences } from '../db/schema';
+import type { AppContext } from '../types';
 
-export const usersRoutes = new Hono();
+export const usersRoutes = new Hono<AppContext>();
 
-// Get current user's chat display info
+type SessionUser = {
+  id: string;
+  fullName: string;
+  username?: string;
+  displayUsername?: string;
+};
+
 usersRoutes.get('/me/chat-info', async (c) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
+  const sessionUser = session.user as SessionUser;
 
   const prefs = await db.query.userPreferences.findFirst({
     where: eq(userPreferences.userId, session.user.id),
   });
 
   const preference = prefs?.displayNamePreference ?? 'fullName';
-  const sessionUser = session.user as {
-    id: string;
-    fullName: string;
-    username?: string;
-    displayUsername?: string;
-  };
-
   const displayName =
     preference === 'username'
       ? sessionUser.displayUsername || sessionUser.username || sessionUser.fullName
@@ -40,12 +37,8 @@ usersRoutes.get('/me/chat-info', async (c) => {
   });
 });
 
-// GET /api/users/search - Search users by username/name
 usersRoutes.get('/search', async (c) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const query = c.req.query('q') || '';
   if (query.length < 2) {
@@ -72,8 +65,8 @@ usersRoutes.get('/search', async (c) => {
           like(user.username, searchPattern),
           like(user.displayUsername, searchPattern)
         ),
-        not(eq(user.id, session.user.id)), // Exclude self
-        isE2eMode ? undefined : not(like(user.email, '%@e2e-test.local')) // Filter test users
+        not(eq(user.id, session.user.id)),
+        isE2eMode ? undefined : not(like(user.email, '%@e2e-test.local'))
       )
     )
     .limit(10);

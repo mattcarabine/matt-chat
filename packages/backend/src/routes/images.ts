@@ -1,24 +1,24 @@
 import { Hono } from 'hono';
-import type { Context } from 'hono';
+import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { eq, and } from 'drizzle-orm';
-import { auth } from '../auth';
 import { db } from '../db';
-import { rooms, roomMembers, uploadedImages } from '../db/schema';
+import { roomMembers, rooms, uploadedImages } from '../db/schema';
 import {
-  getStorage,
   ALLOWED_IMAGE_TYPES,
-  MAX_IMAGE_SIZE_BYTES,
-  isAllowedImageType,
   FilesystemStorage,
+  getStorage,
+  isAllowedImageType,
+  MAX_IMAGE_SIZE_BYTES,
 } from '../storage';
 import {
   verifySignedToken,
-  type UploadTokenPayload,
   type DownloadTokenPayload,
+  type UploadTokenPayload,
 } from '../storage/filesystem';
+import { public_ } from '../middleware/auth';
+import type { AppContext } from '../types';
 
-export const imagesRoutes = new Hono();
+export const imagesRoutes = new Hono<AppContext>();
 
 const uploadUrlRequestSchema = z.object({
   filename: z.string().min(1).max(255),
@@ -40,10 +40,6 @@ const EXTENSION_TO_MIME: Record<string, string> = {
   webp: 'image/webp',
 };
 
-function getSession(c: Context): Promise<Awaited<ReturnType<typeof auth.api.getSession>>> {
-  return auth.api.getSession({ headers: c.req.raw.headers });
-}
-
 function findRoomBySlug(slug: string) {
   return db.query.rooms.findFirst({ where: eq(rooms.slug, slug) });
 }
@@ -54,12 +50,8 @@ function findMembership(roomId: string, userId: string) {
   });
 }
 
-// POST /api/rooms/:slug/images/upload-url - Generate presigned upload URL
 imagesRoutes.post('/rooms/:slug/images/upload-url', async (c) => {
-  const session = await getSession(c);
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const room = await findRoomBySlug(c.req.param('slug'));
   if (!room) {
@@ -79,7 +71,6 @@ imagesRoutes.post('/rooms/:slug/images/upload-url', async (c) => {
 
   const { filename, mimeType, sizeBytes, width, height } = result.data;
 
-  // Validate MIME type
   if (!isAllowedImageType(mimeType)) {
     return c.json(
       { error: `Invalid image type. Allowed: ${ALLOWED_IMAGE_TYPES.join(', ')}` },
@@ -87,7 +78,6 @@ imagesRoutes.post('/rooms/:slug/images/upload-url', async (c) => {
     );
   }
 
-  // Validate size
   if (sizeBytes > MAX_IMAGE_SIZE_BYTES) {
     return c.json(
       { error: `File too large. Maximum size: ${MAX_IMAGE_SIZE_BYTES / 1024 / 1024}MB` },
@@ -99,7 +89,7 @@ imagesRoutes.post('/rooms/:slug/images/upload-url', async (c) => {
   let uploadResult;
   try {
     uploadResult = await storage.generateUploadUrl({
-      roomId: room.slug, // Use slug as storage path prefix
+      roomId: room.slug,
       userId: session.user.id,
       filename,
       mimeType,
@@ -111,7 +101,6 @@ imagesRoutes.post('/rooms/:slug/images/upload-url', async (c) => {
     return c.json({ error: message }, 500);
   }
 
-  // Record in database (pending upload)
   await db.insert(uploadedImages).values({
     id: uploadResult.key,
     roomId: room.id,
@@ -131,12 +120,8 @@ imagesRoutes.post('/rooms/:slug/images/upload-url', async (c) => {
   });
 });
 
-// POST /api/rooms/:slug/images/download-url - Generate presigned download URL
 imagesRoutes.post('/rooms/:slug/images/download-url', async (c) => {
-  const session = await getSession(c);
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const room = await findRoomBySlug(c.req.param('slug'));
   if (!room) {
@@ -156,7 +141,6 @@ imagesRoutes.post('/rooms/:slug/images/download-url', async (c) => {
 
   const { key } = result.data;
 
-  // Verify the image exists and belongs to this room
   const image = await db.query.uploadedImages.findFirst({
     where: eq(uploadedImages.id, key),
   });
@@ -174,8 +158,7 @@ imagesRoutes.post('/rooms/:slug/images/download-url', async (c) => {
   });
 });
 
-// PUT /api/images/upload/:token - Handle actual file upload (filesystem only)
-imagesRoutes.put('/images/upload/:token', async (c) => {
+imagesRoutes.put('/images/upload/:token', public_(), async (c) => {
   const token = c.req.param('token');
   const payload = verifySignedToken<UploadTokenPayload>(token);
 
@@ -183,22 +166,18 @@ imagesRoutes.put('/images/upload/:token', async (c) => {
     return c.json({ error: 'Invalid or expired token' }, 400);
   }
 
-  // Verify content type matches
   const contentType = c.req.header('content-type');
   if (contentType !== payload.mimeType) {
     return c.json({ error: 'Content type mismatch' }, 400);
   }
 
-  // Get the raw body as ArrayBuffer
   const arrayBuffer = await c.req.arrayBuffer();
   const data = Buffer.from(arrayBuffer);
 
-  // Verify size
   if (data.length > payload.maxSize) {
     return c.json({ error: 'File size exceeds declared size' }, 413);
   }
 
-  // Save to filesystem
   const storage = getStorage();
   if (!(storage instanceof FilesystemStorage)) {
     return c.json({ error: 'Upload endpoint only available for filesystem storage' }, 500);
@@ -209,8 +188,7 @@ imagesRoutes.put('/images/upload/:token', async (c) => {
   return c.json({ success: true, key: payload.key });
 });
 
-// GET /api/images/download/:token - Handle actual file download (filesystem only)
-imagesRoutes.get('/images/download/:token', async (c) => {
+imagesRoutes.get('/images/download/:token', public_(), async (c) => {
   const token = c.req.param('token');
   const payload = verifySignedToken<DownloadTokenPayload>(token);
 
@@ -218,7 +196,6 @@ imagesRoutes.get('/images/download/:token', async (c) => {
     return c.json({ error: 'Invalid or expired token' }, 400);
   }
 
-  // Get the file from filesystem
   const storage = getStorage();
   if (!(storage instanceof FilesystemStorage)) {
     return c.json({ error: 'Download endpoint only available for filesystem storage' }, 500);

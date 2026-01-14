@@ -4,6 +4,8 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { auth } from './auth';
+import { authMiddleware } from './middleware/auth';
+import type { AppContext } from './types';
 import { ablyRoutes } from './routes/ably';
 import { preferencesRoutes } from './routes/preferences';
 import { usersRoutes } from './routes/users';
@@ -11,12 +13,10 @@ import { roomsRoutes } from './routes/rooms';
 import { invitationsRoutes } from './routes/invitations';
 import { imagesRoutes } from './routes/images';
 
-const app = new Hono();
+const app = new Hono<AppContext>();
 
-// Logging middleware
 app.use('*', logger());
 
-// CORS - MUST be before routes, credentials: true for cookies
 app.use(
   '/api/*',
   cors({
@@ -27,29 +27,22 @@ app.use(
   })
 );
 
-// Mount BetterAuth handler
-app.on(['GET', 'POST'], '/api/auth/*', (c) => {
-  return auth.handler(c.req.raw);
-});
+app.on(['GET', 'POST'], '/api/auth/*', (c) => auth.handler(c.req.raw));
 
-// Mount chat-related routes
+app.use('/api/*', authMiddleware);
+
 app.route('/api/ably', ablyRoutes);
 app.route('/api/preferences', preferencesRoutes);
 app.route('/api/users', usersRoutes);
 app.route('/api/rooms', roomsRoutes);
 app.route('/api/invitations', invitationsRoutes);
-app.route('/api', imagesRoutes); // Handles /api/rooms/:slug/images/* and /api/images/*
+app.route('/api', imagesRoutes);
 
-// Protected route example - get current user
-app.get('/api/me', async (c) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+app.get('/api/me', (c) => {
+  const session = c.get('session');
   return c.json({ user: session.user });
 });
 
-// Health check
 app.get('/api/health', (c) => c.json({ status: 'ok' }));
 
 const port = parseInt(process.env.PORT || '3000');

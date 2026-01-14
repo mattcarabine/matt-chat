@@ -1,18 +1,14 @@
 import { Hono } from 'hono';
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
-import { auth } from '../auth';
 import { db } from '../db';
-import { rooms, roomMembers, roomInvitations, user } from '../db/schema';
+import { roomInvitations, roomMembers, rooms, user } from '../db/schema';
+import type { AppContext } from '../types';
 
-export const invitationsRoutes = new Hono();
+export const invitationsRoutes = new Hono<AppContext>();
 
-// GET /api/invitations - List pending received invitations
 invitationsRoutes.get('/', async (c) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const invitations = await db
     .select({
@@ -39,12 +35,8 @@ invitationsRoutes.get('/', async (c) => {
   });
 });
 
-// GET /api/invitations/count - Get count of pending invitations (for nav badge)
 invitationsRoutes.get('/count', async (c) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const result = await db
     .select({ count: sql<number>`count(*)` })
@@ -54,12 +46,8 @@ invitationsRoutes.get('/count', async (c) => {
   return c.json({ count: result[0]?.count ?? 0 });
 });
 
-// POST /api/invitations/:id/accept - Accept an invitation
 invitationsRoutes.post('/:id/accept', async (c) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const invitationId = c.req.param('id');
 
@@ -77,10 +65,9 @@ invitationsRoutes.post('/:id/accept', async (c) => {
 
   const now = new Date();
 
-  // Synchronous transaction - better-sqlite3 doesn't support async transactions.
-  // TODO: Switch to async transaction when migrating to Postgres/MySQL.
+  // Synchronous transaction - better-sqlite3 doesn't support async transactions
+  // TODO: Switch to async transaction when migrating to Postgres/MySQL
   db.transaction((tx) => {
-    // Check if already a member (edge case)
     const existingMembership = tx
       .select()
       .from(roomMembers)
@@ -101,7 +88,6 @@ invitationsRoutes.post('/:id/accept', async (c) => {
       }).run();
     }
 
-    // Delete the invitation
     tx.delete(roomInvitations).where(eq(roomInvitations.id, invitationId)).run();
   });
 
@@ -115,12 +101,8 @@ invitationsRoutes.post('/:id/accept', async (c) => {
   });
 });
 
-// POST /api/invitations/:id/decline - Decline an invitation
 invitationsRoutes.post('/:id/decline', async (c) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const invitationId = c.req.param('id');
 

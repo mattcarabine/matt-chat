@@ -1,14 +1,13 @@
 import { Hono } from 'hono';
-import type { Context } from 'hono';
 import { getCookie } from 'hono/cookie';
-import { eq, and, sql, count, not, like } from 'drizzle-orm';
+import { and, count, eq, like, not, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
-import { auth } from '../auth';
 import { db } from '../db';
-import { rooms, roomMembers, roomInvitations, user } from '../db/schema';
+import { roomInvitations, roomMembers, rooms, user } from '../db/schema';
+import type { AppContext } from '../types';
 
-export const roomsRoutes = new Hono();
+export const roomsRoutes = new Hono<AppContext>();
 
 const createRoomSchema = z.object({
   name: z.string().min(1).max(50).trim(),
@@ -23,10 +22,6 @@ function generateSlug(name: string): string {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .substring(0, 50);
-}
-
-async function getSession(c: Context) {
-  return auth.api.getSession({ headers: c.req.raw.headers });
 }
 
 async function getMemberCount(roomId: string): Promise<number> {
@@ -47,12 +42,8 @@ async function findMembership(roomId: string, userId: string) {
   });
 }
 
-// GET /api/rooms - List user's joined rooms
 roomsRoutes.get('/', async (c) => {
-  const session = await getSession(c);
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const memberships = await db.query.roomMembers.findMany({
     where: eq(roomMembers.userId, session.user.id),
@@ -77,24 +68,17 @@ roomsRoutes.get('/', async (c) => {
   return c.json({ rooms: roomsWithCounts });
 });
 
-// GET /api/rooms/search - Search public rooms or show popular rooms
 roomsRoutes.get('/search', async (c) => {
-  const session = await getSession(c);
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
-
+  const session = c.get('session');
   const query = c.req.query('q') || '';
   const userId = session.user.id;
 
-  // Get user's current memberships
   const userMemberships = await db.query.roomMembers.findMany({
     where: eq(roomMembers.userId, userId),
   });
   const memberRoomIds = new Set(userMemberships.map((m) => m.roomId));
 
   if (query) {
-    // Search mode: find rooms matching the query
     const limit = Math.min(parseInt(c.req.query('limit') || '20'), 50);
     const searchPattern = `%${query}%`;
 
@@ -120,8 +104,6 @@ roomsRoutes.get('/search', async (c) => {
     return c.json({ rooms: roomsWithMembership });
   }
 
-  // Popular rooms mode: top 10 by member count, excluding joined and default rooms
-  // Use LEFT JOIN with GROUP BY for efficient database-side counting and sorting
   const popularRoomsQuery = await db
     .select({
       id: rooms.id,
@@ -151,12 +133,8 @@ roomsRoutes.get('/search', async (c) => {
   return c.json({ rooms: popularRooms });
 });
 
-// POST /api/rooms - Create a new room
 roomsRoutes.post('/', async (c) => {
-  const session = await getSession(c);
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const body = await c.req.json();
   const result = createRoomSchema.safeParse(body);
@@ -201,12 +179,8 @@ roomsRoutes.post('/', async (c) => {
   });
 });
 
-// GET /api/rooms/:slug - Get room details
 roomsRoutes.get('/:slug', async (c) => {
-  const session = await getSession(c);
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const room = await findRoomBySlug(c.req.param('slug'));
   if (!room) {
@@ -235,19 +209,12 @@ roomsRoutes.get('/:slug', async (c) => {
   });
 });
 
-// GET /api/rooms/:slug/members - Get room members
 roomsRoutes.get('/:slug/members', async (c) => {
-  const session = await getSession(c);
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
-
   const room = await findRoomBySlug(c.req.param('slug'));
   if (!room) {
     return c.json({ error: 'Room not found' }, 404);
   }
 
-  // In e2e test mode (cookie set), include test users; otherwise filter them out
   const isE2eMode = getCookie(c, 'e2e_mode') === 'true';
 
   const memberships = await db
@@ -277,19 +244,14 @@ roomsRoutes.get('/:slug/members', async (c) => {
   return c.json({ members });
 });
 
-// POST /api/rooms/:slug/join - Join a room
 roomsRoutes.post('/:slug/join', async (c) => {
-  const session = await getSession(c);
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const room = await findRoomBySlug(c.req.param('slug'));
   if (!room) {
     return c.json({ error: 'Room not found' }, 404);
   }
 
-  // Private rooms require an invitation - cannot join directly
   if (!room.isPublic) {
     return c.json({ error: 'Cannot join private room directly - invitation required' }, 403);
   }
@@ -311,24 +273,18 @@ roomsRoutes.post('/:slug/join', async (c) => {
   });
 });
 
-// POST /api/rooms/:slug/invitations - Invite a user to a private room
 roomsRoutes.post('/:slug/invitations', async (c) => {
-  const session = await getSession(c);
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const room = await findRoomBySlug(c.req.param('slug'));
   if (!room) {
     return c.json({ error: 'Room not found' }, 404);
   }
 
-  // Only allow invitations for private rooms
   if (room.isPublic) {
     return c.json({ error: 'Cannot invite to public rooms - users can join directly' }, 400);
   }
 
-  // Check if inviter is a member
   const membership = await findMembership(room.id, session.user.id);
   if (!membership) {
     return c.json({ error: 'You must be a member to invite others' }, 403);
@@ -337,24 +293,20 @@ roomsRoutes.post('/:slug/invitations', async (c) => {
   const body = await c.req.json();
   const { inviteeId } = z.object({ inviteeId: z.string() }).parse(body);
 
-  // Check invitee exists
   const invitee = await db.query.user.findFirst({ where: eq(user.id, inviteeId) });
   if (!invitee) {
     return c.json({ error: 'User not found' }, 404);
   }
 
-  // Check if invitee is already a member
   const existingMembership = await findMembership(room.id, inviteeId);
   if (existingMembership) {
     return c.json({ error: 'User is already a member' }, 400);
   }
 
-  // Delete any existing invitation (for re-invite after decline)
   await db.delete(roomInvitations).where(
     and(eq(roomInvitations.roomId, room.id), eq(roomInvitations.inviteeId, inviteeId))
   );
 
-  // Create new invitation
   const now = new Date();
   const invitationId = nanoid();
 
@@ -369,12 +321,8 @@ roomsRoutes.post('/:slug/invitations', async (c) => {
   return c.json({ success: true, invitationId });
 });
 
-// POST /api/rooms/:slug/leave - Leave a room
 roomsRoutes.post('/:slug/leave', async (c) => {
-  const session = await getSession(c);
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const room = await findRoomBySlug(c.req.param('slug'));
   if (!room) {
@@ -396,12 +344,8 @@ roomsRoutes.post('/:slug/leave', async (c) => {
   return c.json({ success: true });
 });
 
-// DELETE /api/rooms/:slug - Delete a room
 roomsRoutes.delete('/:slug', async (c) => {
-  const session = await getSession(c);
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const room = await findRoomBySlug(c.req.param('slug'));
   if (!room) {

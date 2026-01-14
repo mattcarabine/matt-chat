@@ -63,6 +63,35 @@ pnpm test:e2e     # Run Playwright E2E tests
 - **Re-invite**: Users can be re-invited after declining (invitation deleted on decline, not blocked)
 - **SQLite transactions**: Uses synchronous transactions due to better-sqlite3 limitations. TODO comment marks for async conversion when migrating to Postgres
 
+## Auth Middleware
+
+All `/api/*` routes are protected by default via `authMiddleware` in `src/middleware/auth.ts`.
+
+**Secure by default**: New routes automatically require authentication. No need to remember to add auth checks.
+
+**Session access**: Protected routes access the session via `c.get('session')` - no manual fetching needed.
+
+**Public routes**: Listed in `PUBLIC_ROUTES` array in `middleware/auth.ts`:
+- `/api/health` - Health check
+- `/api/images/upload/*` - Token-based upload (has own signed token auth)
+- `/api/images/download/*` - Token-based download (has own signed token auth)
+- `/api/auth/*` - BetterAuth handlers (mounted before middleware)
+
+**Adding a public route**: Add the path to `PUBLIC_ROUTES` in `middleware/auth.ts`. Use `*` suffix for prefix matching.
+
+**Route file pattern**:
+```typescript
+import { Hono } from 'hono';
+import type { AppContext } from '../types';
+
+export const myRoutes = new Hono<AppContext>();
+
+myRoutes.get('/example', async (c) => {
+  const session = c.get('session'); // Guaranteed to exist
+  // ... use session.user.id, etc.
+});
+```
+
 ## E2E Testing
 
 - **Test user email domain**: All e2e test users use `@e2e-test.local` emails to distinguish them from real users

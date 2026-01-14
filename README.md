@@ -101,6 +101,8 @@ Navigate to http://localhost:5173 in your browser.
 │   │   ├── src/
 │   │   │   ├── auth/      # BetterAuth configuration
 │   │   │   ├── db/        # Drizzle schema and connection
+│   │   │   ├── middleware/# Auth middleware (secure by default)
+│   │   │   ├── routes/    # API route handlers
 │   │   │   └── index.ts   # Server entry point
 │   │   ├── drizzle/       # Migration files
 │   │   └── sqlite.db      # SQLite database (generated)
@@ -218,6 +220,14 @@ Custom endpoints:
 The frontend uses Vite's proxy in development, so no environment variables are required. For production, set `VITE_API_URL` to your backend URL.
 
 ## Development Notes
+
+### API Route Authentication
+
+All `/api/*` routes are **protected by default**. The auth middleware automatically:
+- Returns 401 for unauthenticated requests
+- Provides the session via `c.get('session')` in route handlers
+
+To make a route public, add its path to `PUBLIC_ROUTES` in `packages/backend/src/middleware/auth.ts`.
 
 ### Adding a new migration
 

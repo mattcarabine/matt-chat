@@ -1,26 +1,25 @@
 import { Hono } from 'hono';
 import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
-import { auth } from '../auth';
+import { z } from 'zod';
 import { db } from '../db';
 import { userPreferences } from '../db/schema';
 import { displayNamePreferenceSchema } from '@app/shared';
-import { z } from 'zod';
+import type { AppContext } from '../types';
 
-export const preferencesRoutes = new Hono();
+export const preferencesRoutes = new Hono<AppContext>();
 
-// Get user preferences
+const updatePreferencesSchema = z.object({
+  displayNamePreference: displayNamePreferenceSchema,
+});
+
 preferencesRoutes.get('/', async (c) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const prefs = await db.query.userPreferences.findFirst({
     where: eq(userPreferences.userId, session.user.id),
   });
 
-  // Return defaults if no preferences exist
   return c.json({
     preferences: {
       displayNamePreference: prefs?.displayNamePreference ?? 'fullName',
@@ -28,20 +27,11 @@ preferencesRoutes.get('/', async (c) => {
   });
 });
 
-// Update user preferences
 preferencesRoutes.put('/', async (c) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+  const session = c.get('session');
 
   const body = await c.req.json();
-  const result = z
-    .object({
-      displayNamePreference: displayNamePreferenceSchema,
-    })
-    .safeParse(body);
-
+  const result = updatePreferencesSchema.safeParse(body);
   if (!result.success) {
     return c.json({ error: 'Invalid input', details: result.error.issues }, 400);
   }

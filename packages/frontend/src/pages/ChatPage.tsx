@@ -94,28 +94,45 @@ export function ChatPage(): JSX.Element {
     return <LoadingScreen />;
   }
 
-  if (isLoadingRoom) {
-    return <LoadingScreen message="Loading room..." />;
-  }
-
-  if (roomError || !roomData?.room) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cream">
-        <div className="text-center">
-          <h1 className="font-serif text-4xl text-charcoal mb-4">Room Not Found</h1>
-          <p className="text-stone mb-6">The chat room you're looking for doesn't exist.</p>
-          <Link
-            to="/chat"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-forest text-cream rounded-lg hover:bg-forest-light transition-colors"
-          >
-            Go to Chat
-          </Link>
+  // Determine what to render in the chat content area
+  const renderChatContent = () => {
+    if (isLoadingRoom) {
+      return (
+        <div className="flex-1 flex items-center justify-center bg-cream">
+          <div className="flex items-center gap-3">
+            <SpinnerIcon className="w-6 h-6 border-forest border-t-transparent" />
+            <span className="text-stone">Loading room...</span>
+          </div>
         </div>
+      );
+    }
+
+    if (roomError || !roomData?.room) {
+      return (
+        <div className="flex-1 flex items-center justify-center bg-cream">
+          <div className="text-center">
+            <h1 className="font-serif text-4xl text-charcoal mb-4">Room Not Found</h1>
+            <p className="text-stone mb-6">The chat room you're looking for doesn't exist.</p>
+            <Link
+              to="/chat"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-forest text-cream rounded-lg hover:bg-forest-light transition-colors"
+            >
+              Go to Chat
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
+    const room = roomData.room;
+    return (
+      <div className="flex-1 overflow-hidden">
+        {/* key={roomId} forces React to remount ChatRoom when switching rooms,
+            ensuring Ably subscriptions and message history are properly reset */}
+        <ChatRoom key={roomId} roomId={roomId} roomName={room.name} isPublic={room.isPublic} />
       </div>
     );
-  }
-
-  const room = roomData.room;
+  };
 
   return (
     <div className="h-screen flex flex-col">
@@ -127,9 +144,7 @@ export function ChatPage(): JSX.Element {
           onCreateRoom={() => setShowCreateRoom(true)}
           onBrowseRooms={() => setShowBrowseRooms(true)}
         />
-        <div className="flex-1 overflow-hidden">
-          <ChatRoom roomId={roomId} roomName={room.name} isPublic={room.isPublic} />
-        </div>
+        {renderChatContent()}
       </div>
 
       <CreateRoomModal isOpen={showCreateRoom} onClose={() => setShowCreateRoom(false)} />

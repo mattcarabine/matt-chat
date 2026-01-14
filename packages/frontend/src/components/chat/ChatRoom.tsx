@@ -8,9 +8,10 @@ import { ConnectionStatus } from './ConnectionStatus';
 interface ChatRoomProps {
   roomId: string;
   roomName: string;
+  isPublic: boolean;
 }
 
-export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
+export function ChatRoom({ roomId, roomName, isPublic }: ChatRoomProps) {
 
   return (
     <RoomProvider roomId={roomId}>
@@ -42,7 +43,7 @@ export function ChatRoom({ roomId, roomName }: ChatRoomProps) {
 
         {/* Presence sidebar */}
         <div className="w-64 border-l border-stone-300/50 hidden lg:block">
-          <PresenceList roomSlug={roomId} />
+          <PresenceList roomSlug={roomId} isPrivateRoom={!isPublic} />
         </div>
       </div>
     </RoomProvider>

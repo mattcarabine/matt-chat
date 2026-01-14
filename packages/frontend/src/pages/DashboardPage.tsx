@@ -1,18 +1,10 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useSession, signOut, type User } from '@/lib/auth-client';
+import { Link } from 'react-router-dom';
+import { useSession, type User } from '@/lib/auth-client';
+import { NavBar } from '@/components/layout/NavBar';
 import { DEFAULT_ROOM_SLUG } from '@app/shared';
 
 export function DashboardPage() {
-  const navigate = useNavigate();
   const { data: session } = useSession();
-  const [isSigningOut, setIsSigningOut] = useState(false);
-
-  const handleSignOut = async () => {
-    setIsSigningOut(true);
-    await signOut();
-    navigate('/signin');
-  };
 
   const user = session?.user as User | undefined;
   const fullName = user?.fullName || user?.name || 'User';
@@ -20,42 +12,8 @@ export function DashboardPage() {
   const email = user?.email;
 
   return (
-    <div className="min-h-screen">
-      {/* Navigation */}
-      <nav className="border-b border-stone-300/50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-forest flex items-center justify-center">
-                <svg className="w-4 h-4 text-cream" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                </svg>
-              </div>
-              <span className="font-medium text-charcoal">Dashboard</span>
-            </div>
-            <button
-              onClick={handleSignOut}
-              disabled={isSigningOut}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-stone hover:text-charcoal transition-colors duration-200 disabled:opacity-50"
-              data-testid="signout-button"
-            >
-              {isSigningOut ? (
-                <>
-                  <span className="spinner w-4 h-4" />
-                  Signing out...
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-                  </svg>
-                  Sign out
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-cream">
+      <NavBar currentSection="dashboard" />
 
       {/* Main Content */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">

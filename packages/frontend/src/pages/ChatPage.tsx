@@ -1,18 +1,11 @@
 import { useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
-import { useSession, signOut, type User } from '@/lib/auth-client';
+import { useParams, Link } from 'react-router-dom';
+import { useSession, type User } from '@/lib/auth-client';
 import { ChatRoom, RoomSidebar, CreateRoomModal, BrowseRoomsModal } from '@/components/chat';
+import { NavBar } from '@/components/layout/NavBar';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useRoom } from '@/hooks/useRooms';
 import { DEFAULT_ROOM_SLUG } from '@app/shared';
-
-function ChatIcon({ className = 'w-4 h-4' }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-    </svg>
-  );
-}
 
 function SettingsIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
@@ -23,30 +16,14 @@ function SettingsIcon({ className = 'w-5 h-5' }: { className?: string }) {
   );
 }
 
-function SignOutIcon({ className = 'w-4 h-4' }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-    </svg>
-  );
-}
-
 export function ChatPage() {
-  const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
   const { data: session } = useSession();
   const { preferences, updatePreference, isUpdating } = useUserPreferences();
   const { data: roomData, isLoading: isLoadingRoom, error: roomError } = useRoom(roomId);
-  const [isSigningOut, setIsSigningOut] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
   const [showBrowseRooms, setShowBrowseRooms] = useState(false);
-
-  const handleSignOut = async () => {
-    setIsSigningOut(true);
-    await signOut();
-    navigate('/signin');
-  };
 
   const user = session?.user as User | undefined;
   const fullName = user?.fullName || user?.name || 'User';
@@ -90,45 +67,20 @@ export function ChatPage() {
 
   return (
     <div className="h-screen flex flex-col">
-      {/* Navigation */}
-      <nav className="flex-shrink-0 border-b border-stone-300/50 bg-cream">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-forest flex items-center justify-center">
-                  <ChatIcon className="w-4 h-4 text-cream" />
-                </div>
-                <span className="font-medium text-charcoal">Chat</span>
-              </div>
+      <NavBar currentSection="chat" />
 
-              <div className="hidden sm:flex items-center gap-4">
-                <Link to="/dashboard" className="text-sm text-stone hover:text-charcoal transition-colors">
-                  Dashboard
-                </Link>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="p-2 text-stone hover:text-charcoal transition-colors"
-                title="Chat Settings"
-              >
-                <SettingsIcon />
-              </button>
-
-              <button
-                onClick={handleSignOut}
-                disabled={isSigningOut}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-stone hover:text-charcoal transition-colors duration-200 disabled:opacity-50"
-              >
-                {isSigningOut ? <span className="spinner w-4 h-4" /> : <SignOutIcon />}
-              </button>
-            </div>
-          </div>
+      {/* Chat Settings Bar */}
+      <div className="flex-shrink-0 border-b border-stone-300/50 bg-cream-dark/50 px-4 py-2">
+        <div className="max-w-screen-2xl mx-auto flex items-center justify-between">
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className="flex items-center gap-2 text-sm text-stone hover:text-charcoal transition-colors"
+          >
+            <SettingsIcon className="w-4 h-4" />
+            <span>Chat Settings</span>
+          </button>
         </div>
-      </nav>
+      </div>
 
       {showSettings && (
         <div className="flex-shrink-0 border-b border-stone-300/50 bg-cream-dark px-4 py-4">
@@ -175,7 +127,7 @@ export function ChatPage() {
           onBrowseRooms={() => setShowBrowseRooms(true)}
         />
         <div className="flex-1 overflow-hidden">
-          <ChatRoom roomId={roomId!} roomName={room.name} />
+          <ChatRoom roomId={roomId!} roomName={room.name} isPublic={room.isPublic} />
         </div>
       </div>
 

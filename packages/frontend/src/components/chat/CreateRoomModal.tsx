@@ -12,6 +12,7 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
   const { createRoom, isCreating } = useRoomMutations();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [isPrivate, setIsPrivate] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -19,6 +20,7 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
   const resetForm = () => {
     setName('');
     setDescription('');
+    setIsPrivate(false);
     setError(null);
   };
 
@@ -36,6 +38,7 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
       const result = await createRoom({
         name: trimmedName,
         description: description.trim() || undefined,
+        isPublic: !isPrivate,
       });
       resetForm();
       onClose();
@@ -135,6 +138,30 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
               <p className="text-xs text-stone mt-1">
                 {description.length}/500 characters
               </p>
+            </div>
+
+            <div className="pt-2">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isPrivate}
+                  onChange={(e) => setIsPrivate(e.target.checked)}
+                  disabled={isCreating}
+                  className="
+                    w-4 h-4 mt-0.5 rounded-sm
+                    text-forest focus:ring-forest focus:ring-offset-0
+                    border-stone-300
+                  "
+                />
+                <div>
+                  <span className="text-sm font-medium text-charcoal">
+                    Make this room private
+                  </span>
+                  <p className="text-xs text-stone mt-0.5">
+                    Private rooms require an invitation to join and won't appear in search
+                  </p>
+                </div>
+              </label>
             </div>
           </div>
 

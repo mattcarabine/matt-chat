@@ -148,6 +148,8 @@ Navigate to http://localhost:5173 in your browser.
 Real-time multi-room chat powered by Ably Chat SDK:
 
 - **Multi-room**: Create, join, and leave chat rooms
+- **Private rooms**: Create invite-only rooms that don't appear in search
+- **Invitation system**: Invite users to private rooms by name/username search
 - **Messaging**: Send and receive messages in real-time
 - **Message history**: Automatic backfill when joining rooms (30-day Ably retention)
 - **Presence**: See online and offline room members
@@ -160,6 +162,7 @@ Real-time multi-room chat powered by Ably Chat SDK:
 |-------|-------------|
 | `/chat` | Redirects to `/chat/landing-zone` |
 | `/chat/:slug` | Chat room (e.g., `/chat/landing-zone`) |
+| `/invitations` | View and manage room invitations |
 
 ## API Endpoints
 
@@ -191,6 +194,12 @@ Custom endpoints:
 | POST | `/api/rooms/:slug/join` | Join a room (protected) |
 | POST | `/api/rooms/:slug/leave` | Leave a room (protected) |
 | DELETE | `/api/rooms/:slug` | Delete a room (creator only) |
+| POST | `/api/rooms/:slug/invitations` | Invite user to private room (protected) |
+| GET | `/api/users/search?q=` | Search users by name/username (protected) |
+| GET | `/api/invitations` | List pending invitations (protected) |
+| GET | `/api/invitations/count` | Get invitation count for badge (protected) |
+| POST | `/api/invitations/:id/accept` | Accept an invitation (protected) |
+| POST | `/api/invitations/:id/decline` | Decline an invitation (protected) |
 
 ## Environment Variables
 

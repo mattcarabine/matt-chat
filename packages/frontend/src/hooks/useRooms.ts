@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RoomListItem, RoomSearchResult, Room, CreateRoomInput } from '@app/shared';
-
-const API_URL = import.meta.env.VITE_API_URL || '';
+import { apiFetch } from '@/lib/api';
 
 interface RoomsListResponse {
   rooms: RoomListItem[];
@@ -22,18 +21,6 @@ interface CreateRoomResponse {
 interface JoinRoomResponse {
   success: true;
   room: { id: string; slug: string; name: string };
-}
-
-async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
-    credentials: 'include',
-    ...options,
-  });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error || `Request failed: ${response.status}`);
-  }
-  return response.json();
 }
 
 function fetchMyRooms(): Promise<RoomsListResponse> {
@@ -66,6 +53,14 @@ function leaveRoom(slug: string): Promise<{ success: true }> {
 
 function deleteRoom(slug: string): Promise<{ success: true }> {
   return apiFetch(`/api/rooms/${slug}`, { method: 'DELETE' });
+}
+
+function inviteToRoom(slug: string, inviteeId: string): Promise<{ success: true; invitationId: string }> {
+  return apiFetch(`/api/rooms/${slug}/invitations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ inviteeId }),
+  });
 }
 
 export interface RoomMember {
@@ -151,6 +146,11 @@ export function useRoomMutations() {
     },
   });
 
+  const inviteMutation = useMutation({
+    mutationFn: ({ slug, inviteeId }: { slug: string; inviteeId: string }) =>
+      inviteToRoom(slug, inviteeId),
+  });
+
   return {
     createRoom: createMutation.mutateAsync,
     isCreating: createMutation.isPending,
@@ -167,5 +167,9 @@ export function useRoomMutations() {
     deleteRoom: deleteMutation.mutateAsync,
     isDeleting: deleteMutation.isPending,
     deleteError: deleteMutation.error,
+
+    inviteToRoom: inviteMutation.mutateAsync,
+    isInviting: inviteMutation.isPending,
+    inviteError: inviteMutation.error,
   };
 }

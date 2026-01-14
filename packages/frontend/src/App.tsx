@@ -7,6 +7,7 @@ import { SignUpPage } from '@/pages/SignUpPage';
 import { SignInPage } from '@/pages/SignInPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { ChatPage } from '@/pages/ChatPage';
+import { InvitationsPage } from '@/pages/InvitationsPage';
 import { DEFAULT_ROOM_SLUG } from '@app/shared';
 
 const queryClient = new QueryClient({
@@ -46,6 +47,14 @@ export function App() {
               element={
                 <ProtectedRoute>
                   <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/invitations"
+              element={
+                <ProtectedRoute>
+                  <InvitationsPage />
                 </ProtectedRoute>
               }
             />

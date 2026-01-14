@@ -14,6 +14,7 @@ export const roomSlugSchema = z
 export const createRoomInputSchema = z.object({
   name: z.string().min(1).max(50).trim(),
   description: z.string().max(500).optional(),
+  isPublic: z.boolean().optional().default(true),
 });
 export type CreateRoomInput = z.infer<typeof createRoomInputSchema>;
 
@@ -39,6 +40,7 @@ export const roomListItemSchema = z.object({
   name: z.string(),
   description: z.string().nullable(),
   isDefault: z.boolean(),
+  isPublic: z.boolean(),
   memberCount: z.number(),
   joinedAt: z.string(),
 });
@@ -54,6 +56,26 @@ export const roomSearchResultSchema = z.object({
   isMember: z.boolean(),
 });
 export type RoomSearchResult = z.infer<typeof roomSearchResultSchema>;
+
+// Room invitation schema (for API responses)
+export const roomInvitationSchema = z.object({
+  id: z.string(),
+  roomId: z.string(),
+  roomName: z.string(),
+  roomSlug: z.string(),
+  inviterId: z.string(),
+  inviterName: z.string(),
+  createdAt: z.string(),
+});
+export type RoomInvitation = z.infer<typeof roomInvitationSchema>;
+
+// User search result schema
+export const userSearchResultSchema = z.object({
+  id: z.string(),
+  displayName: z.string(),
+  username: z.string().nullable(),
+});
+export type UserSearchResult = z.infer<typeof userSearchResultSchema>;
 
 // Display name preference
 export const displayNamePreferenceSchema = z.enum(['fullName', 'username']);

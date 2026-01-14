@@ -108,6 +108,25 @@ export const roomMembers = sqliteTable(
   (table) => [unique().on(table.roomId, table.userId)]
 );
 
+// Room invitations table - tracks pending invitations to private rooms
+export const roomInvitations = sqliteTable(
+  'room_invitations',
+  {
+    id: text('id').primaryKey(),
+    roomId: text('roomId')
+      .notNull()
+      .references(() => rooms.id, { onDelete: 'cascade' }),
+    inviterId: text('inviterId')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    inviteeId: text('inviteeId')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
+  },
+  (table) => [unique().on(table.roomId, table.inviteeId)]
+);
+
 // Uploaded images table - tracks images uploaded to chat
 export const uploadedImages = sqliteTable('uploaded_images', {
   id: text('id').primaryKey(), // Same as storage key
@@ -130,6 +149,7 @@ export const roomsRelations = relations(rooms, ({ many, one }) => ({
   members: many(roomMembers),
   creator: one(user, { fields: [rooms.createdBy], references: [user.id] }),
   images: many(uploadedImages),
+  invitations: many(roomInvitations),
 }));
 
 export const roomMembersRelations = relations(roomMembers, ({ one }) => ({
@@ -140,4 +160,10 @@ export const roomMembersRelations = relations(roomMembers, ({ one }) => ({
 export const uploadedImagesRelations = relations(uploadedImages, ({ one }) => ({
   room: one(rooms, { fields: [uploadedImages.roomId], references: [rooms.id] }),
   uploader: one(user, { fields: [uploadedImages.uploaderId], references: [user.id] }),
+}));
+
+export const roomInvitationsRelations = relations(roomInvitations, ({ one }) => ({
+  room: one(rooms, { fields: [roomInvitations.roomId], references: [rooms.id] }),
+  inviter: one(user, { fields: [roomInvitations.inviterId], references: [user.id] }),
+  invitee: one(user, { fields: [roomInvitations.inviteeId], references: [user.id] }),
 }));

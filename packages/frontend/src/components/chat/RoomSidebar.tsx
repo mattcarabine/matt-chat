@@ -29,6 +29,14 @@ function HashIcon({ className = 'w-4 h-4', strokeWidth = 1.5 }: IconProps) {
   );
 }
 
+function LockIcon({ className = 'w-4 h-4', strokeWidth = 1.5 }: IconProps) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={strokeWidth}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+    </svg>
+  );
+}
+
 function PlusIcon({ className = 'w-3.5 h-3.5' }: IconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -74,7 +82,13 @@ function RoomItem({ room, isActive }: { room: RoomListItem; isActive: boolean })
         flex-shrink-0 w-8 h-8 rounded-sm flex items-center justify-center transition-colors duration-200
         ${isActive ? 'bg-cream/10' : 'bg-stone-300/30 group-hover:bg-stone-300/50'}
       `}>
-        {room.isDefault ? <HomeIcon className={`w-4 h-4 ${iconClass}`} /> : <HashIcon className={`w-4 h-4 ${iconClass}`} />}
+        {room.isDefault ? (
+          <HomeIcon className={`w-4 h-4 ${iconClass}`} />
+        ) : room.isPublic === false ? (
+          <LockIcon className={`w-4 h-4 ${iconClass}`} />
+        ) : (
+          <HashIcon className={`w-4 h-4 ${iconClass}`} />
+        )}
       </div>
 
       <div className="flex-1 min-w-0">

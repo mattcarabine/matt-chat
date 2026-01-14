@@ -27,8 +27,8 @@ Use code-simplifier to simplify any code you write before finishing.
 
 ```
 packages/backend/         # Hono API server (port 3000)
-  src/routes/             # API routes (ably, preferences, users, rooms)
-  src/db/schema.ts        # Drizzle schema (rooms, roomMembers tables)
+  src/routes/             # API routes (ably, preferences, users, rooms, invitations)
+  src/db/schema.ts        # Drizzle schema (rooms, roomMembers, roomInvitations tables)
 packages/frontend/        # React app (port 5173)
   src/components/chat/    # Chat UI (ChatRoom, RoomSidebar, modals)
   src/hooks/useChat.ts    # Ably hooks (messages, presence, typing)
@@ -53,6 +53,15 @@ pnpm test:e2e     # Run Playwright E2E tests
 - **Room slug as Ably room ID**: `/chat/:slug` maps directly to Ably room
 - **History**: Uses `historyBeforeSubscribe()` for seamless backfill without message overlap
 - **Presence**: Shows online/offline members by cross-referencing Ably presence with room membership
+
+## Private Rooms & Invitations
+
+- **Private rooms**: Rooms can be marked private at creation. Private rooms don't appear in search results
+- **Invitation system**: Any member of a private room can invite others by searching for users by name/username
+- **Invitations page**: `/invitations` shows pending invitations with accept/decline options. Nav badge shows count
+- **Cascade delete**: Invitations auto-delete when room is deleted (database-level `onDelete: cascade`)
+- **Re-invite**: Users can be re-invited after declining (invitation deleted on decline, not blocked)
+- **SQLite transactions**: Uses synchronous transactions due to better-sqlite3 limitations. TODO comment marks for async conversion when migrating to Postgres
 
 ## E2E Testing
 

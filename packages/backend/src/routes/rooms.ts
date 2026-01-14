@@ -6,13 +6,14 @@ import { nanoid } from 'nanoid';
 import { z } from 'zod';
 import { auth } from '../auth';
 import { db } from '../db';
-import { rooms, roomMembers, user } from '../db/schema';
+import { rooms, roomMembers, roomInvitations, user } from '../db/schema';
 
 export const roomsRoutes = new Hono();
 
 const createRoomSchema = z.object({
   name: z.string().min(1).max(50).trim(),
   description: z.string().max(500).optional(),
+  isPublic: z.boolean().optional().default(true),
 });
 
 function generateSlug(name: string): string {
@@ -67,6 +68,7 @@ roomsRoutes.get('/', async (c) => {
       name: m.room.name,
       description: m.room.description,
       isDefault: m.room.isDefault,
+      isPublic: m.room.isPublic,
       memberCount: await getMemberCount(m.roomId),
       joinedAt: m.joinedAt.toISOString(),
     }))
@@ -162,7 +164,7 @@ roomsRoutes.post('/', async (c) => {
     return c.json({ error: 'Invalid input', details: result.error.issues }, 400);
   }
 
-  const { name, description } = result.data;
+  const { name, description, isPublic } = result.data;
 
   // Generate unique slug
   let slug = generateSlug(name);
@@ -182,7 +184,7 @@ roomsRoutes.post('/', async (c) => {
     description: description || null,
     createdBy: session.user.id,
     isDefault: false,
-    isPublic: true,
+    isPublic,
     createdAt: now,
     updatedAt: now,
   });
@@ -287,6 +289,11 @@ roomsRoutes.post('/:slug/join', async (c) => {
     return c.json({ error: 'Room not found' }, 404);
   }
 
+  // Private rooms require an invitation - cannot join directly
+  if (!room.isPublic) {
+    return c.json({ error: 'Cannot join private room directly - invitation required' }, 403);
+  }
+
   if (await findMembership(room.id, session.user.id)) {
     return c.json({ error: 'Already a member of this room' }, 400);
   }
@@ -302,6 +309,64 @@ roomsRoutes.post('/:slug/join', async (c) => {
     success: true,
     room: { id: room.id, slug: room.slug, name: room.name },
   });
+});
+
+// POST /api/rooms/:slug/invitations - Invite a user to a private room
+roomsRoutes.post('/:slug/invitations', async (c) => {
+  const session = await getSession(c);
+  if (!session) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  const room = await findRoomBySlug(c.req.param('slug'));
+  if (!room) {
+    return c.json({ error: 'Room not found' }, 404);
+  }
+
+  // Only allow invitations for private rooms
+  if (room.isPublic) {
+    return c.json({ error: 'Cannot invite to public rooms - users can join directly' }, 400);
+  }
+
+  // Check if inviter is a member
+  const membership = await findMembership(room.id, session.user.id);
+  if (!membership) {
+    return c.json({ error: 'You must be a member to invite others' }, 403);
+  }
+
+  const body = await c.req.json();
+  const { inviteeId } = z.object({ inviteeId: z.string() }).parse(body);
+
+  // Check invitee exists
+  const invitee = await db.query.user.findFirst({ where: eq(user.id, inviteeId) });
+  if (!invitee) {
+    return c.json({ error: 'User not found' }, 404);
+  }
+
+  // Check if invitee is already a member
+  const existingMembership = await findMembership(room.id, inviteeId);
+  if (existingMembership) {
+    return c.json({ error: 'User is already a member' }, 400);
+  }
+
+  // Delete any existing invitation (for re-invite after decline)
+  await db.delete(roomInvitations).where(
+    and(eq(roomInvitations.roomId, room.id), eq(roomInvitations.inviteeId, inviteeId))
+  );
+
+  // Create new invitation
+  const now = new Date();
+  const invitationId = nanoid();
+
+  await db.insert(roomInvitations).values({
+    id: invitationId,
+    roomId: room.id,
+    inviterId: session.user.id,
+    inviteeId,
+    createdAt: now,
+  });
+
+  return c.json({ success: true, invitationId });
 });
 
 // POST /api/rooms/:slug/leave - Leave a room

@@ -9,6 +9,8 @@ import type { AppContext } from '../types';
 
 export const roomsRoutes = new Hono<AppContext>();
 
+const E2E_EMAIL_PATTERN = '%@e2e-test.local';
+
 const createRoomSchema = z.object({
   name: z.string().min(1).max(50).trim(),
   description: z.string().max(500).optional(),
@@ -24,11 +26,22 @@ function generateSlug(name: string): string {
     .substring(0, 50);
 }
 
-async function getMemberCount(roomId: string): Promise<number> {
+async function getMemberCount(roomId: string, isE2eMode: boolean): Promise<number> {
+  const baseCondition = eq(roomMembers.roomId, roomId);
+
+  if (isE2eMode) {
+    const result = await db
+      .select({ count: count() })
+      .from(roomMembers)
+      .where(baseCondition);
+    return result[0]?.count ?? 0;
+  }
+
   const result = await db
     .select({ count: count() })
     .from(roomMembers)
-    .where(eq(roomMembers.roomId, roomId));
+    .innerJoin(user, eq(roomMembers.userId, user.id))
+    .where(and(baseCondition, not(like(user.email, E2E_EMAIL_PATTERN))));
   return result[0]?.count ?? 0;
 }
 
@@ -68,7 +81,7 @@ roomsRoutes.get('/', async (c) => {
       description: m.room.description,
       isDefault: m.room.isDefault,
       isPublic: m.room.isPublic,
-      memberCount: await getMemberCount(m.roomId),
+      memberCount: await getMemberCount(m.roomId, isE2eMode),
       joinedAt: m.joinedAt.toISOString(),
     }))
   );
@@ -106,13 +119,21 @@ roomsRoutes.get('/search', async (c) => {
         slug: room.slug,
         name: room.name,
         description: room.description,
-        memberCount: await getMemberCount(room.id),
+        memberCount: await getMemberCount(room.id, isE2eMode),
         isMember: memberRoomIds.has(room.id),
       }))
     );
 
     return c.json({ rooms: roomsWithMembership });
   }
+
+  // Exclude E2E test users from member count in production mode
+  const memberJoinCondition = isE2eMode
+    ? eq(roomMembers.roomId, rooms.id)
+    : and(
+        eq(roomMembers.roomId, rooms.id),
+        sql`${roomMembers.userId} NOT IN (SELECT id FROM user WHERE email LIKE ${E2E_EMAIL_PATTERN})`
+      );
 
   const popularRoomsQuery = await db
     .select({
@@ -123,7 +144,7 @@ roomsRoutes.get('/search', async (c) => {
       memberCount: count(roomMembers.id),
     })
     .from(rooms)
-    .leftJoin(roomMembers, eq(roomMembers.roomId, rooms.id))
+    .leftJoin(roomMembers, memberJoinCondition)
     .where(
       and(
         eq(rooms.isPublic, true),
@@ -194,6 +215,7 @@ roomsRoutes.post('/', async (c) => {
 
 roomsRoutes.get('/:slug', async (c) => {
   const session = c.get('session');
+  const isE2eMode = getCookie(c, 'e2e_mode') === 'true';
 
   const room = await findRoomBySlug(c.req.param('slug'));
   if (!room) {
@@ -201,7 +223,7 @@ roomsRoutes.get('/:slug', async (c) => {
   }
 
   const [memberCount, membership] = await Promise.all([
-    getMemberCount(room.id),
+    getMemberCount(room.id, isE2eMode),
     findMembership(room.id, session.user.id),
   ]);
 
@@ -244,7 +266,7 @@ roomsRoutes.get('/:slug/members', async (c) => {
     .where(
       isE2eMode
         ? eq(roomMembers.roomId, room.id)
-        : and(eq(roomMembers.roomId, room.id), not(like(user.email, '%@e2e-test.local')))
+        : and(eq(roomMembers.roomId, room.id), not(like(user.email, E2E_EMAIL_PATTERN)))
     );
 
   const members = memberships.map((m) => ({

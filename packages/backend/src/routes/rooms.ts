@@ -329,10 +329,6 @@ roomsRoutes.post('/:slug/leave', async (c) => {
     return c.json({ error: 'Room not found' }, 404);
   }
 
-  if (room.isDefault) {
-    return c.json({ error: 'Cannot leave the default room' }, 400);
-  }
-
   if (!(await findMembership(room.id, session.user.id))) {
     return c.json({ error: 'Not a member of this room' }, 404);
   }

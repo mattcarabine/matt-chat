@@ -133,7 +133,7 @@ export function useChatMessages() {
 // Hook for presence (online users)
 export function useChatPresence() {
   const { presenceData } = usePresenceListener();
-  const { update } = usePresence({ autoEnterLeave: true });
+  const { update, leave } = usePresence({ autoEnterLeave: true });
   const [isLoading, setIsLoading] = useState(true);
   const enteredRef = useRef(false);
 
@@ -167,7 +167,7 @@ export function useChatPresence() {
     };
   });
 
-  return { users, isLoading };
+  return { users, isLoading, leavePresence: leave };
 }
 
 // Hook for typing indicators
@@ -209,6 +209,7 @@ export function useChat() {
     ...messagesData,
     users: presenceData.users,
     presenceLoading: presenceData.isLoading,
+    leavePresence: presenceData.leavePresence,
     ...typingData,
   };
 }

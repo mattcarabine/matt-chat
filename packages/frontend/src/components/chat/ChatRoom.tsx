@@ -1,17 +1,24 @@
+import { useState } from 'react';
 import { RoomProvider } from '@/providers/ChatProvider';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { PresenceList } from './PresenceList';
 import { TypingIndicator } from './TypingIndicator';
 import { ConnectionStatus } from './ConnectionStatus';
+import { RoomHeaderDropdown } from './RoomHeaderDropdown';
+import { LeaveRoomModal } from './LeaveRoomModal';
+import { InviteUserModal } from './InviteUserModal';
 
 interface ChatRoomProps {
   roomId: string;
   roomName: string;
   isPublic: boolean;
+  onLeaveSuccess: () => void;
 }
 
-export function ChatRoom({ roomId, roomName, isPublic }: ChatRoomProps) {
+export function ChatRoom({ roomId, roomName, isPublic, onLeaveSuccess }: ChatRoomProps) {
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   return (
     <RoomProvider roomId={roomId}>
@@ -24,7 +31,14 @@ export function ChatRoom({ roomId, roomName, isPublic }: ChatRoomProps) {
               <div className="w-3 h-3 rounded-full bg-forest animate-pulse" />
               <h2 className="font-serif text-xl text-charcoal">{roomName}</h2>
             </div>
-            <ConnectionStatus />
+            <div className="flex items-center gap-2">
+              <ConnectionStatus />
+              <RoomHeaderDropdown
+                isPrivateRoom={!isPublic}
+                onLeaveRoom={() => setShowLeaveModal(true)}
+                onInviteUser={() => setShowInviteModal(true)}
+              />
+            </div>
           </div>
 
           {/* Messages */}
@@ -46,6 +60,20 @@ export function ChatRoom({ roomId, roomName, isPublic }: ChatRoomProps) {
           <PresenceList roomSlug={roomId} isPrivateRoom={!isPublic} />
         </div>
       </div>
+
+      {/* Modals */}
+      <LeaveRoomModal
+        isOpen={showLeaveModal}
+        onClose={() => setShowLeaveModal(false)}
+        roomSlug={roomId}
+        roomName={roomName}
+        onLeaveSuccess={onLeaveSuccess}
+      />
+      <InviteUserModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        roomSlug={roomId}
+      />
     </RoomProvider>
   );
 }

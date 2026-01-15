@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { ChatRoom, RoomSidebar, CreateRoomModal, BrowseRoomsModal } from '@/components/chat';
 import { NavBar } from '@/components/layout/NavBar';
 import { SpinnerIcon } from '@/components/icons';
 import { useRoom, useMyRooms } from '@/hooks/useRooms';
-import { getLastRoom, setLastRoom } from '@/hooks/useLastRoom';
+import { getLastRoom, setLastRoom, clearLastRoom } from '@/hooks/useLastRoom';
 
 function LoadingScreen({ message = 'Loading...' }: { message?: string }): JSX.Element {
   return (
@@ -20,10 +20,30 @@ function LoadingScreen({ message = 'Loading...' }: { message?: string }): JSX.El
 export function ChatPage(): JSX.Element {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: myRoomsData, isLoading: isLoadingMyRooms } = useMyRooms();
   const { data: roomData, isLoading: isLoadingRoom, error: roomError } = useRoom(roomId);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
   const [showBrowseRooms, setShowBrowseRooms] = useState(false);
+
+  // Handle successful room leave - navigate to another room
+  const handleLeaveSuccess = useCallback(() => {
+    const rooms = myRoomsData?.rooms ?? [];
+    const nextRoom = rooms.find((r) => r.slug !== roomId);
+
+    if (getLastRoom() === roomId) {
+      clearLastRoom();
+    }
+
+    if (nextRoom) {
+      navigate(`/chat/${nextRoom.slug}`, { replace: true });
+      return;
+    }
+
+    // No other rooms - navigate to base chat page with state to prevent
+    // the redirect useEffect from navigating with stale room data
+    navigate('/chat', { replace: true, state: { fromLeaveAllRooms: true } });
+  }, [myRoomsData?.rooms, roomId, navigate]);
 
   useEffect(() => {
     if (roomId) {
@@ -37,6 +57,13 @@ export function ChatPage(): JSX.Element {
     const rooms = myRoomsData.rooms;
     if (rooms.length === 0) return;
 
+    // Skip redirect if we just left all rooms - query data may be stale
+    const state = location.state as { fromLeaveAllRooms?: boolean } | null;
+    if (state?.fromLeaveAllRooms) {
+      window.history.replaceState({}, document.title);
+      return;
+    }
+
     const lastRoom = getLastRoom();
     if (lastRoom && rooms.some((r) => r.slug === lastRoom)) {
       navigate(`/chat/${lastRoom}`, { replace: true });
@@ -47,7 +74,7 @@ export function ChatPage(): JSX.Element {
       (a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime()
     )[0];
     navigate(`/chat/${mostRecentRoom.slug}`, { replace: true });
-  }, [roomId, isLoadingMyRooms, myRoomsData, navigate]);
+  }, [roomId, isLoadingMyRooms, myRoomsData, navigate, location.state]);
 
   if (!roomId && isLoadingMyRooms) {
     return <LoadingScreen />;
@@ -129,7 +156,13 @@ export function ChatPage(): JSX.Element {
       <div className="flex-1 overflow-hidden">
         {/* key={roomId} forces React to remount ChatRoom when switching rooms,
             ensuring Ably subscriptions and message history are properly reset */}
-        <ChatRoom key={roomId} roomId={roomId} roomName={room.name} isPublic={room.isPublic} />
+        <ChatRoom
+          key={roomId}
+          roomId={roomId}
+          roomName={room.name}
+          isPublic={room.isPublic}
+          onLeaveSuccess={handleLeaveSuccess}
+        />
       </div>
     );
   };

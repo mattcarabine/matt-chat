@@ -37,8 +37,8 @@ test.describe('Authentication Flow', () => {
       // Submit
       await page.getByTestId('signup-submit').click();
 
-      // Should redirect to chat (landing-zone is the default room for new users)
-      await expect(page).toHaveURL(/\/chat\/landing-zone/);
+      // Should redirect to chat (E2E users don't see Landing Zone, so they get the "No Rooms Yet" state)
+      await expect(page).toHaveURL(/\/chat$/);
     });
 
     test('shows validation errors for invalid input', async ({ page }) => {
@@ -71,7 +71,7 @@ test.describe('Authentication Flow', () => {
       await page.getByTestId('signup-email').fill(email);
       await page.getByTestId('signup-password').fill('password123');
       await page.getByTestId('signup-submit').click();
-      await expect(page).toHaveURL(/\/chat\//);
+      await expect(page).toHaveURL(/\/chat/);
 
       // Sign out via dropdown
       await signOut(page);
@@ -100,7 +100,7 @@ test.describe('Authentication Flow', () => {
       await page.getByTestId('signup-email').fill(`first${id}@e2e-test.local`);
       await page.getByTestId('signup-password').fill('password123');
       await page.getByTestId('signup-submit').click();
-      await expect(page).toHaveURL(/\/chat\//);
+      await expect(page).toHaveURL(/\/chat/);
 
       // Sign out via dropdown
       await signOut(page);
@@ -131,7 +131,7 @@ test.describe('Authentication Flow', () => {
       await page.getByTestId('signup-email').fill(`${username}@e2e-test.local`);
       await page.getByTestId('signup-password').fill('password123');
       await page.getByTestId('signup-submit').click();
-      await expect(page).toHaveURL(/\/chat\//);
+      await expect(page).toHaveURL(/\/chat/);
 
       // Sign out via dropdown
       await signOut(page);
@@ -143,7 +143,7 @@ test.describe('Authentication Flow', () => {
       await page.getByTestId('signin-submit').click();
 
       // Should redirect to chat
-      await expect(page).toHaveURL(/\/chat\//);
+      await expect(page).toHaveURL(/\/chat/);
     });
 
     test('allows user to sign in with email', async ({ page }) => {
@@ -157,7 +157,7 @@ test.describe('Authentication Flow', () => {
       await page.getByTestId('signup-email').fill(email);
       await page.getByTestId('signup-password').fill('password123');
       await page.getByTestId('signup-submit').click();
-      await expect(page).toHaveURL(/\/chat\//);
+      await expect(page).toHaveURL(/\/chat/);
 
       // Sign out via dropdown
       await signOut(page);
@@ -169,7 +169,7 @@ test.describe('Authentication Flow', () => {
       await page.getByTestId('signin-submit').click();
 
       // Should redirect to chat
-      await expect(page).toHaveURL(/\/chat\//);
+      await expect(page).toHaveURL(/\/chat/);
     });
 
     test('shows error for invalid credentials', async ({ page }) => {
@@ -205,13 +205,13 @@ test.describe('Authentication Flow', () => {
       await page.getByTestId('signup-email').fill(`redirect${id}@e2e-test.local`);
       await page.getByTestId('signup-password').fill('password123');
       await page.getByTestId('signup-submit').click();
-      await expect(page).toHaveURL(/\/chat\//);
+      await expect(page).toHaveURL(/\/chat/);
 
       // Try to visit signin
       await page.goto('/signin');
 
       // Should redirect back to chat
-      await expect(page).toHaveURL(/\/chat\//);
+      await expect(page).toHaveURL(/\/chat/);
     });
   });
 
@@ -226,7 +226,7 @@ test.describe('Authentication Flow', () => {
       await page.getByTestId('signup-email').fill(`signout${id}@e2e-test.local`);
       await page.getByTestId('signup-password').fill('password123');
       await page.getByTestId('signup-submit').click();
-      await expect(page).toHaveURL(/\/chat\//);
+      await expect(page).toHaveURL(/\/chat/);
 
       // Sign out via dropdown
       await signOut(page);

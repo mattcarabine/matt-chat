@@ -1,0 +1,1 @@
+ALTER TABLE `rooms` ADD `isE2e` integer DEFAULT false NOT NULL;

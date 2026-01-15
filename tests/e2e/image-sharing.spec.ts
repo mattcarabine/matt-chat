@@ -5,6 +5,7 @@ import {
   uniqueId,
   setE2eCookie,
   createUserAndSignIn,
+  createRoom,
   waitForMessageList,
 } from './utils/helpers';
 
@@ -23,8 +24,9 @@ test.describe('Image Sharing', () => {
     test('image upload button is visible in message input', async ({ page }) => {
       const id = uniqueId();
 
-      // Create user and navigate to chat
+      // Create user and E2E room
       await createUserAndSignIn(page, 'Image Test User', id);
+      await createRoom(page, `Image Test ${id}`);
       await waitForMessageList(page);
 
       // Verify the image upload button is visible
@@ -44,8 +46,9 @@ test.describe('Image Sharing', () => {
     test('can select an image file for upload', async ({ page }) => {
       const id = uniqueId();
 
-      // Create user and navigate to chat
+      // Create user and E2E room
       await createUserAndSignIn(page, 'Image Select User', id);
+      await createRoom(page, `Image Select ${id}`);
       await waitForMessageList(page);
 
       // Get the file input
@@ -73,8 +76,9 @@ test.describe('Image Sharing', () => {
     test('selected image shows preview before sending', async ({ page }) => {
       const id = uniqueId();
 
-      // Create user and navigate to chat
+      // Create user and E2E room
       await createUserAndSignIn(page, 'Preview Show User', id);
+      await createRoom(page, `Preview Show ${id}`);
       await waitForMessageList(page);
 
       // Select a test image file
@@ -118,8 +122,9 @@ test.describe('Image Sharing', () => {
     test('can remove image from preview before sending', async ({ page }) => {
       const id = uniqueId();
 
-      // Create user and navigate to chat
+      // Create user and E2E room
       await createUserAndSignIn(page, 'Preview Remove User', id);
+      await createRoom(page, `Preview Remove ${id}`);
       await waitForMessageList(page);
 
       // Select a test image file
@@ -155,8 +160,9 @@ test.describe('Image Sharing', () => {
     test('sent image appears in message list', async ({ page }) => {
       const id = uniqueId();
 
-      // Create user and navigate to chat
+      // Create user and E2E room
       await createUserAndSignIn(page, 'Image Send User', id);
+      await createRoom(page, `Image Send ${id}`);
       await waitForMessageList(page);
 
       // Select a test image file
@@ -195,8 +201,9 @@ test.describe('Image Sharing', () => {
     test('image thumbnail is clickable', async ({ page }) => {
       const id = uniqueId();
 
-      // Create user and navigate to chat
+      // Create user and E2E room
       await createUserAndSignIn(page, 'Thumbnail Click User', id);
+      await createRoom(page, `Thumbnail Click ${id}`);
       await waitForMessageList(page);
 
       // Select and send a test image
@@ -234,8 +241,9 @@ test.describe('Image Sharing', () => {
     test('can send multiple images in one message', async ({ page }) => {
       const id = uniqueId();
 
-      // Create user and navigate to chat
+      // Create user and E2E room
       await createUserAndSignIn(page, 'Multi Image User', id);
+      await createRoom(page, `Multi Image ${id}`);
       await waitForMessageList(page);
 
       // Select multiple image files at once
@@ -287,8 +295,9 @@ test.describe('Image Sharing', () => {
     test('lightbox opens when clicking image', async ({ page }) => {
       const id = uniqueId();
 
-      // Create user and navigate to chat
+      // Create user and E2E room
       await createUserAndSignIn(page, 'Lightbox Open User', id);
+      await createRoom(page, `Lightbox Open ${id}`);
       await waitForMessageList(page);
 
       // Select and send a test image
@@ -339,8 +348,9 @@ test.describe('Image Sharing', () => {
     test('lightbox can be closed', async ({ page }) => {
       const id = uniqueId();
 
-      // Create user and navigate to chat
+      // Create user and E2E room
       await createUserAndSignIn(page, 'Lightbox Close User', id);
+      await createRoom(page, `Lightbox Close ${id}`);
       await waitForMessageList(page);
 
       // Select and send a test image
@@ -389,8 +399,9 @@ test.describe('Image Sharing', () => {
     test('invalid file type shows error message', async ({ page }) => {
       const id = uniqueId();
 
-      // Create user and navigate to chat
+      // Create user and E2E room
       await createUserAndSignIn(page, 'Invalid Type User', id);
+      await createRoom(page, `Invalid Type ${id}`);
       await waitForMessageList(page);
 
       // Get the file input

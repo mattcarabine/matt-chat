@@ -26,6 +26,7 @@ export async function setE2eCookie(context: BrowserContext): Promise<void> {
 /**
  * Create a new user account and verify successful navigation to chat.
  * Uses the e2e-test.local email domain to mark as test user.
+ * Note: E2E users don't see Landing Zone, so they land on /chat without a room slug.
  */
 export async function createUserAndSignIn(
   page: Page,
@@ -38,7 +39,8 @@ export async function createUserAndSignIn(
   await page.getByTestId('signup-email').fill(`user${id}@e2e-test.local`);
   await page.getByTestId('signup-password').fill('password123');
   await page.getByTestId('signup-submit').click();
-  await expect(page).toHaveURL(/\/chat\//);
+  // E2E users don't see any rooms initially (Landing Zone is filtered out)
+  await expect(page).toHaveURL(/\/chat/);
 }
 
 /**
@@ -72,12 +74,15 @@ export async function createRoom(
 ): Promise<string> {
   const expectedSlugPrefix = slugify(roomName);
 
+  // Click the Create button (in sidebar or No Rooms Yet screen)
   await page.click('button:has-text("Create")');
-  await page.fill('input#room-name', roomName);
+
+  // Wait for modal to appear and fill the form using data-testid
+  await page.getByTestId('create-room-name').fill(roomName);
   if (isPrivate) {
-    await page.check('input[type="checkbox"]');
+    await page.getByTestId('create-room-private').check();
   }
-  await page.click('button:has-text("Create Room")');
+  await page.getByTestId('create-room-submit').click();
 
   // Wait specifically for the new room URL, not just any /chat/ URL
   await page.waitForURL(new RegExp(`/chat/${expectedSlugPrefix}`));

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { uniqueId, setE2eCookie, createUserAndSignIn } from './utils/helpers';
+import { uniqueId, setE2eCookie, createUserAndSignIn, createRoom } from './utils/helpers';
 
 test.describe('Navigation', () => {
   test.beforeEach(async ({ context }) => {
@@ -94,6 +94,7 @@ test.describe('Navigation', () => {
       const fullName = `Nav Connection ${id}`;
 
       await createUserAndSignIn(page, fullName, id);
+      await createRoom(page, `Connection Test ${id}`);
 
       // Wait for chat to load and connection to be established
       await expect(page.getByTestId('room-sidebar')).toBeVisible();
@@ -110,49 +111,53 @@ test.describe('Navigation', () => {
     test('sidebar highlights current room', async ({ page }) => {
       const id = uniqueId();
       const fullName = `Nav Sidebar ${id}`;
-      const newRoomName = `Sidebar Test ${id}`;
+      const firstRoomName = `First Room ${id}`;
+      const secondRoomName = `Second Room ${id}`;
 
       await createUserAndSignIn(page, fullName, id);
+
+      // Create first room
+      await createRoom(page, firstRoomName);
 
       // Wait for sidebar to load
       await expect(page.getByTestId('room-sidebar')).toBeVisible();
 
-      // Get the current URL to extract the default room slug
-      const initialUrl = page.url();
-      const defaultRoomSlug = initialUrl.split('/chat/')[1];
+      // Get the current URL to extract the first room slug
+      const firstUrl = page.url();
+      const firstRoomSlug = firstUrl.split('/chat/')[1];
 
-      // Verify the default room is highlighted (data-active="true")
-      const defaultRoomItem = page.getByTestId(`room-item-${defaultRoomSlug}`);
-      await expect(defaultRoomItem).toHaveAttribute('data-active', 'true');
+      // Verify the first room is highlighted (data-active="true")
+      const firstRoomItem = page.getByTestId(`room-item-${firstRoomSlug}`);
+      await expect(firstRoomItem).toHaveAttribute('data-active', 'true');
 
-      // Create a new room
+      // Create a second room
       await page.click('button:has-text("Create")');
-      await page.fill('input#room-name', newRoomName);
-      await page.click('button:has-text("Create Room")');
+      await page.fill('[data-testid="create-room-name"]', secondRoomName);
+      await page.getByTestId('create-room-submit').click();
 
-      // Wait for navigation to new room
-      await expect(page).toHaveURL(/\/chat\/sidebar-test-/);
+      // Wait for navigation to second room
+      await expect(page).toHaveURL(/\/chat\/second-room-/);
 
-      // Extract new room slug
-      const newUrl = page.url();
-      const newRoomSlug = newUrl.split('/chat/')[1];
+      // Extract second room slug
+      const secondUrl = page.url();
+      const secondRoomSlug = secondUrl.split('/chat/')[1];
 
-      // Verify the new room is now highlighted
-      const newRoomItem = page.getByTestId(`room-item-${newRoomSlug}`);
-      await expect(newRoomItem).toHaveAttribute('data-active', 'true');
+      // Verify the second room is now highlighted
+      const secondRoomItem = page.getByTestId(`room-item-${secondRoomSlug}`);
+      await expect(secondRoomItem).toHaveAttribute('data-active', 'true');
 
-      // Verify the default room is no longer highlighted
-      await expect(defaultRoomItem).toHaveAttribute('data-active', 'false');
+      // Verify the first room is no longer highlighted
+      await expect(firstRoomItem).toHaveAttribute('data-active', 'false');
 
-      // Click on the default room to navigate back
-      await defaultRoomItem.click();
+      // Click on the first room to navigate back
+      await firstRoomItem.click();
 
-      // Verify URL changed back to default room
-      await expect(page).toHaveURL(`/chat/${defaultRoomSlug}`);
+      // Verify URL changed back to first room
+      await expect(page).toHaveURL(`/chat/${firstRoomSlug}`);
 
-      // Verify highlight moved back to default room
-      await expect(defaultRoomItem).toHaveAttribute('data-active', 'true');
-      await expect(newRoomItem).toHaveAttribute('data-active', 'false');
+      // Verify highlight moved back to first room
+      await expect(firstRoomItem).toHaveAttribute('data-active', 'true');
+      await expect(secondRoomItem).toHaveAttribute('data-active', 'false');
     });
   });
 });

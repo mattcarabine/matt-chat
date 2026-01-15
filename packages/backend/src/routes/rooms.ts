@@ -44,6 +44,7 @@ async function findMembership(roomId: string, userId: string) {
 
 roomsRoutes.get('/', async (c) => {
   const session = c.get('session');
+  const isE2eMode = getCookie(c, 'e2e_mode') === 'true';
 
   const memberships = await db.query.roomMembers.findMany({
     where: eq(roomMembers.userId, session.user.id),
@@ -52,8 +53,15 @@ roomsRoutes.get('/', async (c) => {
     },
   });
 
+  // Filter rooms based on E2E mode:
+  // - E2E mode: only show E2E rooms
+  // - Production: only show non-E2E rooms
+  const filteredMemberships = memberships.filter((m) =>
+    isE2eMode ? m.room.isE2e : !m.room.isE2e
+  );
+
   const roomsWithCounts = await Promise.all(
-    memberships.map(async (m) => ({
+    filteredMemberships.map(async (m) => ({
       id: m.room.id,
       slug: m.room.slug,
       name: m.room.name,
@@ -72,6 +80,7 @@ roomsRoutes.get('/search', async (c) => {
   const session = c.get('session');
   const query = c.req.query('q') || '';
   const userId = session.user.id;
+  const isE2eMode = getCookie(c, 'e2e_mode') === 'true';
 
   const userMemberships = await db.query.roomMembers.findMany({
     where: eq(roomMembers.userId, userId),
@@ -85,6 +94,7 @@ roomsRoutes.get('/search', async (c) => {
     const searchResults = await db.query.rooms.findMany({
       where: and(
         eq(rooms.isPublic, true),
+        eq(rooms.isE2e, isE2eMode),
         sql`(${rooms.name} LIKE ${searchPattern} OR ${rooms.description} LIKE ${searchPattern})`
       ),
       limit,
@@ -118,6 +128,7 @@ roomsRoutes.get('/search', async (c) => {
       and(
         eq(rooms.isPublic, true),
         eq(rooms.isDefault, false),
+        eq(rooms.isE2e, isE2eMode),
         sql`${rooms.id} NOT IN (SELECT roomId FROM room_members WHERE userId = ${userId})`
       )
     )
@@ -135,6 +146,7 @@ roomsRoutes.get('/search', async (c) => {
 
 roomsRoutes.post('/', async (c) => {
   const session = c.get('session');
+  const isE2eMode = getCookie(c, 'e2e_mode') === 'true';
 
   const body = await c.req.json();
   const result = createRoomSchema.safeParse(body);
@@ -163,6 +175,7 @@ roomsRoutes.post('/', async (c) => {
     createdBy: session.user.id,
     isDefault: false,
     isPublic,
+    isE2e: isE2eMode,
     createdAt: now,
     updatedAt: now,
   });
@@ -246,10 +259,19 @@ roomsRoutes.get('/:slug/members', async (c) => {
 
 roomsRoutes.post('/:slug/join', async (c) => {
   const session = c.get('session');
+  const isE2eMode = getCookie(c, 'e2e_mode') === 'true';
 
   const room = await findRoomBySlug(c.req.param('slug'));
   if (!room) {
     return c.json({ error: 'Room not found' }, 404);
+  }
+
+  // Prevent cross-mode joining
+  if (room.isE2e && !isE2eMode) {
+    return c.json({ error: 'Room not found' }, 404);
+  }
+  if (!room.isE2e && isE2eMode) {
+    return c.json({ error: 'Cannot join production rooms in E2E mode' }, 403);
   }
 
   if (!room.isPublic) {

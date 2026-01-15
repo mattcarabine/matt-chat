@@ -18,9 +18,6 @@ test.describe('Typing Indicators', () => {
 
     // Create first user (the typer) and a room
     await createUserAndSignIn(page, 'Typing User', id);
-    await waitForMessageList(page);
-
-    // Create a new room for this test
     const roomSlug = await createRoom(page, roomName);
     await waitForMessageList(page);
 
@@ -30,7 +27,6 @@ test.describe('Typing Indicators', () => {
     const page2 = await context2.newPage();
     const id2 = uniqueId();
     await createUserAndSignIn(page2, 'Observer User', id2);
-    await waitForMessageList(page2);
 
     // Second user joins the same room via browse
     await page2.click('button:has-text("Browse")');
@@ -72,9 +68,6 @@ test.describe('Typing Indicators', () => {
 
     // Create first user (the typer) and a room
     await createUserAndSignIn(page, 'Typer Stop', id);
-    await waitForMessageList(page);
-
-    // Create a new room for this test
     const roomSlug = await createRoom(page, roomName);
     await waitForMessageList(page);
 
@@ -84,7 +77,6 @@ test.describe('Typing Indicators', () => {
     const page2 = await context2.newPage();
     const id2 = uniqueId();
     await createUserAndSignIn(page2, 'Observer Stop', id2);
-    await waitForMessageList(page2);
 
     // Second user joins the same room via browse
     await page2.click('button:has-text("Browse")');
@@ -126,9 +118,6 @@ test.describe('Typing Indicators', () => {
 
     // Create observer user and a room
     await createUserAndSignIn(page, 'Observer Multi', id);
-    await waitForMessageList(page);
-
-    // Create a new room for this test
     const roomSlug = await createRoom(page, roomName);
     await waitForMessageList(page);
 
@@ -138,7 +127,6 @@ test.describe('Typing Indicators', () => {
     const page2 = await context2.newPage();
     const id2 = uniqueId();
     await createUserAndSignIn(page2, 'Typer One', id2);
-    await waitForMessageList(page2);
 
     // Typer1 joins the same room via browse
     await page2.click('button:has-text("Browse")');
@@ -155,7 +143,6 @@ test.describe('Typing Indicators', () => {
     const page3 = await context3.newPage();
     const id3 = uniqueId();
     await createUserAndSignIn(page3, 'Typer Two', id3);
-    await waitForMessageList(page3);
 
     // Typer2 joins the same room via browse
     await page3.click('button:has-text("Browse")');
@@ -198,11 +185,8 @@ test.describe('Typing Indicators', () => {
   test('own typing does not show indicator to self', async ({ page }) => {
     const id = uniqueId();
 
-    // Create user and wait for chat to load
+    // Create user and E2E room
     await createUserAndSignIn(page, 'Solo Typer', id);
-    await waitForMessageList(page);
-
-    // Create a new room to test in isolation
     await createRoom(page, `Self Typing ${id}`);
     await waitForMessageList(page);
 

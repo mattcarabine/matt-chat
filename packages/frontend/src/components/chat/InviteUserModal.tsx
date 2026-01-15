@@ -66,6 +66,7 @@ function UserSearchResultItem({
         </div>
       </div>
       <button
+        data-testid={`invite-user-${user.id}`}
         onClick={onInvite}
         disabled={isInviting || isInvited}
         className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex-shrink-0 ${buttonClassName}`}
@@ -118,7 +119,10 @@ export function InviteUserModal({ isOpen, onClose, roomSlug }: InviteUserModalPr
       />
 
       {/* Modal */}
-      <div className="relative bg-sand-50 dark:bg-sand-900 rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden border border-sand-200 dark:border-sand-700">
+      <div
+        data-testid="invite-user-modal"
+        className="relative bg-sand-50 dark:bg-sand-900 rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden border border-sand-200 dark:border-sand-700"
+      >
         {/* Header */}
         <div className="px-6 py-4 border-b border-sand-200 dark:border-sand-700">
           <h2 className="font-display font-semibold text-xl text-sand-900 dark:text-sand-50">Invite Member</h2>
@@ -133,6 +137,7 @@ export function InviteUserModal({ isOpen, onClose, roomSlug }: InviteUserModalPr
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sand-500 dark:text-sand-400" />
             <input
               type="text"
+              data-testid="invite-user-search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by name or username..."
@@ -181,6 +186,7 @@ export function InviteUserModal({ isOpen, onClose, roomSlug }: InviteUserModalPr
         <div className="px-6 py-4 bg-sand-100 dark:bg-sand-800/50 border-t border-sand-200 dark:border-sand-700 flex justify-end">
           <button
             type="button"
+            data-testid="invite-modal-done"
             onClick={handleClose}
             className="px-4 py-2 text-sm font-medium text-sand-600 dark:text-sand-300 hover:text-sand-900 dark:hover:text-sand-50 transition-colors"
           >

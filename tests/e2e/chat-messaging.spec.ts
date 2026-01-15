@@ -3,6 +3,7 @@ import {
   uniqueId,
   setE2eCookie,
   createUserAndSignIn,
+  createRoom,
   sendMessage,
   waitForMessageList,
 } from './utils/helpers';
@@ -17,8 +18,9 @@ test.describe('Chat Messaging', () => {
       const id = uniqueId();
       const messageText = `Hello from test ${id}`;
 
-      // Create user and navigate to chat
+      // Create user, create E2E room, and navigate to chat
       await createUserAndSignIn(page, 'Message Sender', id);
+      await createRoom(page, `Send Test ${id}`);
       await waitForMessageList(page);
 
       // Send a message
@@ -41,8 +43,9 @@ test.describe('Chat Messaging', () => {
         `Third message ${id}`,
       ];
 
-      // Create user and navigate to chat
+      // Create user, create E2E room, and navigate to chat
       await createUserAndSignIn(page, 'Multi Sender', id);
+      await createRoom(page, `Multi Send Test ${id}`);
       await waitForMessageList(page);
 
       // Send multiple messages using the helper
@@ -63,8 +66,9 @@ test.describe('Chat Messaging', () => {
       const fullName = 'Sender Display Test';
       const messageText = `Display sender test ${id}`;
 
-      // Create user with a specific full name
+      // Create user with a specific full name and create E2E room
       await createUserAndSignIn(page, fullName, id);
+      await createRoom(page, `Sender Display Test ${id}`);
       await waitForMessageList(page);
 
       // Send a message
@@ -90,8 +94,9 @@ test.describe('Chat Messaging', () => {
       const longSentence = 'This is a very long sentence that should wrap properly when it reaches the edge of the container. '.repeat(3);
       const messageText = `Long message test ${id}\n\n${longWord}\n\n${longSentence}`;
 
-      // Create user and navigate to chat
+      // Create user, create E2E room, and navigate to chat
       await createUserAndSignIn(page, 'Long Message Tester', id);
+      await createRoom(page, `Long Message Test ${id}`);
       await waitForMessageList(page);
 
       // Send the long message directly (sendMessage helper uses pressSequentially which doesn't work well with long multiline text)
@@ -136,12 +141,14 @@ test.describe('Chat Messaging', () => {
     test('message history loads when entering a room', async ({ page }) => {
       const id = uniqueId();
       const messageText = `History message ${id}`;
+      const roomName = `History Test ${id}`;
 
-      // Create user and sign in (lands in default "Landing Zone" room)
+      // Create user and create E2E room
       await createUserAndSignIn(page, 'History Tester', id);
+      const roomSlug = await createRoom(page, roomName);
       await waitForMessageList(page);
 
-      // Send a message to the default room
+      // Send a message to the room
       await sendMessage(page, messageText);
 
       // Verify message is visible
@@ -152,8 +159,8 @@ test.describe('Chat Messaging', () => {
       await page.goto('/invitations');
       await expect(page).toHaveURL('/invitations');
 
-      // Navigate back to chat (which will load the default room)
-      await page.getByRole('link', { name: 'Chat', exact: true }).click();
+      // Navigate back to the specific room
+      await page.goto(`/chat/${roomSlug}`);
       await waitForMessageList(page);
 
       // Verify the message history is loaded - the message should still be there
@@ -167,16 +174,9 @@ test.describe('Chat Messaging', () => {
       const roomName = `Persist Refresh Test ${id}`;
       const messageText = `Persisted message ${id}`;
 
-      // Create user and navigate to chat
+      // Create user and create a room for this test
       await createUserAndSignIn(page, 'Persist Tester', id);
-      await waitForMessageList(page);
-
-      // Create a new room for this test to isolate from other tests
-      await page.click('button:has-text("Create")');
-      await page.fill('input#room-name', roomName);
-      await page.click('button:has-text("Create Room")');
-      // Wait specifically for the new room URL (slug contains persist-refresh-test)
-      await page.waitForURL(/\/chat\/persist-refresh-test-/);
+      await createRoom(page, roomName);
       await waitForMessageList(page);
 
       // Get the current URL to verify we return to the same room
@@ -215,15 +215,9 @@ test.describe('Chat Messaging', () => {
       const id = uniqueId();
       const roomName = `Empty State Test ${id}`;
 
-      // Create user and navigate to chat
+      // Create user and create a new room (which will have no messages)
       await createUserAndSignIn(page, 'Empty State Tester', id);
-      await waitForMessageList(page);
-
-      // Create a new room (which will have no messages)
-      await page.click('button:has-text("Create")');
-      await page.fill('input#room-name', roomName);
-      await page.click('button:has-text("Create Room")');
-      await page.waitForURL(/\/chat\//);
+      await createRoom(page, roomName);
 
       // Verify empty state is shown
       const emptyState = page.getByTestId('message-list-empty');
@@ -237,19 +231,20 @@ test.describe('Chat Messaging', () => {
     test('message input is focused when entering a room', async ({ page }) => {
       const id = uniqueId();
 
-      // Create user and navigate to chat (lands in default room)
+      // Create user and E2E room
       await createUserAndSignIn(page, 'Focus Tester', id);
+      await createRoom(page, `Focus Test Room ${id}`);
       await waitForMessageList(page);
 
       // Verify the message input is focused
       const input = page.getByTestId('message-input');
       await expect(input).toBeFocused();
 
-      // Create a new room and verify focus transfers
-      const roomName = `Focus Test Room ${id}`;
+      // Create another room and verify focus transfers
+      const roomName = `Focus Test Room 2 ${id}`;
       await page.click('button:has-text("Create")');
-      await page.fill('input#room-name', roomName);
-      await page.click('button:has-text("Create Room")');
+      await page.fill('[data-testid="create-room-name"]', roomName);
+      await page.getByTestId('create-room-submit').click();
       await page.waitForURL(/\/chat\//);
       await waitForMessageList(page);
 
@@ -261,8 +256,9 @@ test.describe('Chat Messaging', () => {
       const id = uniqueId();
       const messageText = `Enter key message ${id}`;
 
-      // Create user and navigate to chat
+      // Create user, create E2E room, and navigate to chat
       await createUserAndSignIn(page, 'Enter Key Tester', id);
+      await createRoom(page, `Enter Key Test ${id}`);
       await waitForMessageList(page);
 
       // Type a message and press Enter to send (instead of clicking button)
@@ -289,13 +285,7 @@ test.describe('Chat Messaging', () => {
 
       // Create first user and a room
       await createUserAndSignIn(page, 'Sender User', id);
-      await waitForMessageList(page);
-
-      // Create a new room for this test (to isolate from other tests)
-      await page.click('button:has-text("Create")');
-      await page.fill('input#room-name', roomName);
-      await page.click('button:has-text("Create Room")');
-      await page.waitForURL(/\/chat\//);
+      await createRoom(page, roomName);
       await waitForMessageList(page);
 
       // Create second user in a new context
@@ -304,7 +294,6 @@ test.describe('Chat Messaging', () => {
       const page2 = await context2.newPage();
       const id2 = uniqueId();
       await createUserAndSignIn(page2, 'Receiver User', id2);
-      await waitForMessageList(page2);
 
       // Second user joins the same room via browse
       await page2.click('button:has-text("Browse")');

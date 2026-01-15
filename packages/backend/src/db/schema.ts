@@ -84,6 +84,7 @@ export const rooms = sqliteTable('rooms', {
   createdBy: text('createdBy').references(() => user.id, { onDelete: 'set null' }),
   isDefault: integer('isDefault', { mode: 'boolean' }).notNull().default(false),
   isPublic: integer('isPublic', { mode: 'boolean' }).notNull().default(true), // For future private rooms
+  isE2e: integer('isE2e', { mode: 'boolean' }).notNull().default(false), // Marks E2E test rooms
   createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull(),
 });

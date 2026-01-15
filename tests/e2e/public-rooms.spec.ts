@@ -24,15 +24,15 @@ test.describe('Public Rooms', () => {
       await page.click('button:has-text("Create")');
 
       // Fill in room details
-      await page.fill('input#room-name', roomName);
-      await page.fill('textarea#room-description', roomDescription);
+      await page.fill('[data-testid="create-room-name"]', roomName);
+      await page.fill('[data-testid="create-room-description"]', roomDescription);
 
       // Ensure private checkbox is NOT checked (default should be public)
-      const privateCheckbox = page.locator('input[type="checkbox"]');
+      const privateCheckbox = page.getByTestId('create-room-private');
       await expect(privateCheckbox).not.toBeChecked();
 
       // Submit the form
-      await page.click('button:has-text("Create Room")');
+      await page.getByTestId('create-room-submit').click();
 
       // Should navigate to the new room
       await expect(page).toHaveURL(/\/chat\/public-room-/);
@@ -69,9 +69,9 @@ test.describe('Public Rooms', () => {
       // First user creates a public room with a unique name
       await createUserAndSignIn(page, 'Search Creator', id);
       await page.click('button:has-text("Create")');
-      await page.fill('input#room-name', roomName);
-      await page.fill('textarea#room-description', roomDescription);
-      await page.click('button:has-text("Create Room")');
+      await page.fill('[data-testid="create-room-name"]', roomName);
+      await page.fill('[data-testid="create-room-description"]', roomDescription);
+      await page.getByTestId('create-room-submit').click();
       await page.waitForURL(/\/chat\/searchable-room-/);
 
       // Get the room slug from URL
@@ -112,9 +112,9 @@ test.describe('Public Rooms', () => {
       // First user creates a public room
       await createUserAndSignIn(page, 'Desc Search Creator', id);
       await page.click('button:has-text("Create")');
-      await page.fill('input#room-name', roomName);
-      await page.fill('textarea#room-description', roomDescription);
-      await page.click('button:has-text("Create Room")');
+      await page.fill('[data-testid="create-room-name"]', roomName);
+      await page.fill('[data-testid="create-room-description"]', roomDescription);
+      await page.getByTestId('create-room-submit').click();
       await page.waitForURL(/\/chat\/generic-room-/);
 
       // Get the room slug from URL
@@ -153,9 +153,9 @@ test.describe('Public Rooms', () => {
       // First user creates a public room
       await createUserAndSignIn(page, 'Room Creator', id);
       await page.click('button:has-text("Create")');
-      await page.fill('input#room-name', roomName);
-      await page.fill('textarea#room-description', roomDescription);
-      await page.click('button:has-text("Create Room")');
+      await page.fill('[data-testid="create-room-name"]', roomName);
+      await page.fill('[data-testid="create-room-description"]', roomDescription);
+      await page.getByTestId('create-room-submit').click();
 
       // Wait for navigation to the newly created room (matches the slug pattern)
       await page.waitForURL(/\/chat\/browse-visible-/);
@@ -198,9 +198,9 @@ test.describe('Public Rooms', () => {
       // First user creates a public room
       await createUserAndSignIn(page, 'Room Owner', id);
       await page.click('button:has-text("Create")');
-      await page.fill('input#room-name', roomName);
-      await page.fill('textarea#room-description', roomDescription);
-      await page.click('button:has-text("Create Room")');
+      await page.fill('[data-testid="create-room-name"]', roomName);
+      await page.fill('[data-testid="create-room-description"]', roomDescription);
+      await page.getByTestId('create-room-submit').click();
       await page.waitForURL(/\/chat\/joinable-room-/);
 
       // Get the room slug from URL
@@ -248,9 +248,9 @@ test.describe('Public Rooms', () => {
       // First user creates a public room
       await createUserAndSignIn(page, 'Sidebar Room Owner', id);
       await page.click('button:has-text("Create")');
-      await page.fill('input#room-name', roomName);
-      await page.fill('textarea#room-description', roomDescription);
-      await page.click('button:has-text("Create Room")');
+      await page.fill('[data-testid="create-room-name"]', roomName);
+      await page.fill('[data-testid="create-room-description"]', roomDescription);
+      await page.getByTestId('create-room-submit').click();
       await page.waitForURL(/\/chat\/sidebar-join-room-/);
 
       // Get the room slug from URL
@@ -298,9 +298,9 @@ test.describe('Public Rooms', () => {
       // Create user and a room (user becomes a member automatically)
       await createUserAndSignIn(page, 'Badge Tester', id);
       await page.click('button:has-text("Create")');
-      await page.fill('input#room-name', roomName);
-      await page.fill('textarea#room-description', roomDescription);
-      await page.click('button:has-text("Create Room")');
+      await page.fill('[data-testid="create-room-name"]', roomName);
+      await page.fill('[data-testid="create-room-description"]', roomDescription);
+      await page.getByTestId('create-room-submit').click();
       await page.waitForURL(/\/chat\/badge-test-room-/);
 
       // Get the room slug from URL
@@ -336,9 +336,9 @@ test.describe('Public Rooms', () => {
       // First user creates a public room
       await createUserAndSignIn(page, 'Room Creator', id);
       await page.click('button:has-text("Create")');
-      await page.fill('input#room-name', roomName);
-      await page.fill('textarea#room-description', roomDescription);
-      await page.click('button:has-text("Create Room")');
+      await page.fill('[data-testid="create-room-name"]', roomName);
+      await page.fill('[data-testid="create-room-description"]', roomDescription);
+      await page.getByTestId('create-room-submit').click();
       await page.waitForURL(/\/chat\/already-member-room-/);
 
       // Get the room slug from URL
@@ -398,9 +398,9 @@ test.describe('Public Rooms', () => {
       // First user creates a public room (member 1)
       await createUserAndSignIn(page, 'Member Count Creator', id);
       await page.click('button:has-text("Create")');
-      await page.fill('input#room-name', roomName);
-      await page.fill('textarea#room-description', roomDescription);
-      await page.click('button:has-text("Create Room")');
+      await page.fill('[data-testid="create-room-name"]', roomName);
+      await page.fill('[data-testid="create-room-description"]', roomDescription);
+      await page.getByTestId('create-room-submit').click();
       await page.waitForURL(/\/chat\/member-count-room-/);
 
       // Get the room slug from URL

@@ -152,8 +152,8 @@ test.describe('User Profile', () => {
 
       // Create a room and send a message with default full name preference
       await page.click('button:has-text("Create")');
-      await page.fill('input#room-name', `FullName Room ${id}`);
-      await page.click('button:has-text("Create Room")');
+      await page.fill('[data-testid="create-room-name"]', `FullName Room ${id}`);
+      await page.getByTestId('create-room-submit').click();
       await page.waitForURL(/\/chat\//);
 
       // Send a message - should display full name by default
@@ -178,11 +178,13 @@ test.describe('User Profile', () => {
       // Navigate to chat to create a NEW room to test the updated preference
       // (new room ensures fresh message group, avoiding grouping with previous messages)
       await page.goto('/chat');
-      await expect(page.getByTestId('message-list').or(page.getByTestId('message-list-empty'))).toBeVisible();
       await page.click('button:has-text("Create")');
-      await page.fill('input#room-name', `Username Room ${id}`);
-      await page.click('button:has-text("Create Room")');
+      await page.fill('[data-testid="create-room-name"]', `Username Room ${id}`);
+      await page.getByTestId('create-room-submit').click();
       await page.waitForURL(/\/chat\//);
+
+      // Wait for message list to be ready before sending
+      await expect(page.getByTestId('message-list').or(page.getByTestId('message-list-empty'))).toBeVisible({ timeout: 15000 });
 
       // Send a message - should now display username with @ prefix
       const usernameMessage = `Username msg ${id}`;

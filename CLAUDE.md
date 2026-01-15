@@ -114,6 +114,13 @@ e2e/
 - **e2e_mode cookie**: Tests set `e2e_mode=true` cookie so backend includes test users in responses
 - **Production filtering**: Without cookie, `@e2e-test.local` users filtered at DB level
 
+### E2E Room Isolation
+- **E2E rooms**: Rooms created with `e2e_mode=true` cookie are marked `isE2e: true` in the database
+- **E2E mode filtering**: Tests only see E2E rooms (Landing Zone and production rooms are hidden)
+- **Production filtering**: Without cookie, E2E rooms are filtered out from room lists and search
+- **Cross-mode protection**: Users cannot join rooms from the opposite mode (production users can't join E2E rooms and vice versa)
+- **Tests must create rooms**: Since E2E users don't see Landing Zone, all tests must create their own E2E rooms using `createRoom()` helper
+
 ### Writing Tests
 
 **Always use helpers for repeated actions:**

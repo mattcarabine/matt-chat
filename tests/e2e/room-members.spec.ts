@@ -17,8 +17,9 @@ test.describe('Room Members', () => {
       const id = uniqueId();
       const fullName = `Header Count User ${id}`;
 
-      // Create user and navigate to chat (lands in default room)
+      // Create user and E2E room
       await createUserAndSignIn(page, fullName, id);
+      await createRoom(page, `Header Count ${id}`);
       await waitForMessageList(page);
 
       // Wait for the online count to appear in the header
@@ -38,8 +39,9 @@ test.describe('Room Members', () => {
       const id = uniqueId();
       const fullName = 'Presence Test User';
 
-      // Create user and navigate to chat (lands in default room)
+      // Create user and E2E room
       await createUserAndSignIn(page, fullName, id);
+      await createRoom(page, `Presence Test ${id}`);
       await waitForMessageList(page);
 
       // Wait for presence list to load

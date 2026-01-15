@@ -55,7 +55,10 @@ export function NavBar({ currentSection }: NavBarProps): JSX.Element {
                     <Icon className="w-4 h-4" />
                     <span className="hidden sm:inline">{item.label}</span>
                     {badge !== undefined && (
-                      <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-semibold bg-ember-500 text-white rounded-full min-w-[18px] tabular-nums">
+                      <span
+                        data-testid="invitation-count-badge"
+                        className="inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-semibold bg-ember-500 text-white rounded-full min-w-[18px] tabular-nums"
+                      >
                         {badge > 99 ? '99+' : badge}
                       </span>
                     )}

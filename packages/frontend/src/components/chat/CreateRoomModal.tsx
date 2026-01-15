@@ -64,7 +64,10 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
       />
 
       {/* Modal */}
-      <div className="relative bg-sand-50 dark:bg-sand-900 rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden border border-sand-200 dark:border-sand-700">
+      <div
+        data-testid="create-room-modal"
+        className="relative bg-sand-50 dark:bg-sand-900 rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden border border-sand-200 dark:border-sand-700"
+      >
         {/* Header */}
         <div className="px-6 py-4 border-b border-sand-200 dark:border-sand-700">
           <h2 className="font-display font-semibold text-xl text-sand-900 dark:text-sand-50">Create a Room</h2>
@@ -91,6 +94,7 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
               </label>
               <input
                 id="room-name"
+                data-testid="create-room-name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -113,6 +117,7 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
               </label>
               <textarea
                 id="room-description"
+                data-testid="create-room-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="What's this room about?"
@@ -130,6 +135,7 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
+                  data-testid="create-room-private"
                   checked={isPrivate}
                   onChange={(e) => setIsPrivate(e.target.checked)}
                   disabled={isCreating}
@@ -159,6 +165,7 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
             </button>
             <button
               type="submit"
+              data-testid="create-room-submit"
               disabled={isCreating || !name.trim()}
               className="px-4 py-2 text-sm font-medium text-white bg-ember-500 rounded-lg hover:bg-ember-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >

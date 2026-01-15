@@ -15,6 +15,7 @@ test.describe('Leave Room', () => {
     test('room menu button is visible in chat header', async ({ page }) => {
       const id = uniqueId();
       await createUserAndSignIn(page, 'Menu Test User', id);
+      await createRoom(page, `Menu Test Room ${id}`);
 
       // Should be in chat with room menu visible
       await expect(page.getByTestId('room-menu-button')).toBeVisible();
@@ -23,6 +24,7 @@ test.describe('Leave Room', () => {
     test('clicking room menu shows dropdown with Leave Room option', async ({ page }) => {
       const id = uniqueId();
       await createUserAndSignIn(page, 'Dropdown Test User', id);
+      await createRoom(page, `Dropdown Test Room ${id}`);
 
       // Click room menu
       await page.getByTestId('room-menu-button').click();
@@ -31,17 +33,15 @@ test.describe('Leave Room', () => {
       await expect(page.locator('text=Leave Room')).toBeVisible();
     });
 
-    test('Leave Room is available for any room including default room', async ({ page }) => {
+    test('Leave Room is available for any room', async ({ page }) => {
       const id = uniqueId();
-      await createUserAndSignIn(page, 'Default Room Test', id);
-
-      // Should be in Landing Zone (default room)
-      await expect(page).toHaveURL(/\/chat\/landing-zone/);
+      await createUserAndSignIn(page, 'Any Room Test', id);
+      await createRoom(page, `Any Room Test ${id}`);
 
       // Click room menu
       await page.getByTestId('room-menu-button').click();
 
-      // Should show enabled Leave Room button (no longer disabled for default rooms)
+      // Should show enabled Leave Room button
       await expect(page.getByTestId('leave-room-button')).toBeVisible();
     });
   });
@@ -101,7 +101,8 @@ test.describe('Leave Room', () => {
       const id = uniqueId();
       await createUserAndSignIn(page, 'Leave Flow User', id);
 
-      // Create a new room
+      // Create two rooms so we have somewhere to go after leaving one
+      await createRoom(page, `Fallback Room ${id}`);
       const roomName = `Leave Flow Test ${id}`;
       await createRoom(page, roomName);
 
@@ -114,43 +115,44 @@ test.describe('Leave Room', () => {
       await page.getByTestId('leave-room-button').click();
       await page.getByTestId('leave-room-confirm').click();
 
-      // Should be redirected to Landing Zone and room removed from sidebar
-      await expect(page).toHaveURL(/\/chat\/landing-zone/);
+      // Should be redirected to the fallback room and leave-flow-test room removed from sidebar
+      await expect(page).toHaveURL(/\/chat\/fallback-room-/);
       await expect(page.locator(`a[href*="/chat/leave-flow-test-"]`)).not.toBeVisible();
     });
 
-    test('user can leave the default room', async ({ page }) => {
+    test('leaving one room and then leaving another shows navigation to remaining room', async ({ page }) => {
       const id = uniqueId();
-      await createUserAndSignIn(page, 'Leave Default User', id);
+      await createUserAndSignIn(page, 'Leave Multi User', id);
 
-      // Should be in Landing Zone (default room)
-      await expect(page).toHaveURL(/\/chat\/landing-zone/);
+      // Create two rooms
+      const room1Name = `First Room ${id}`;
+      const room2Name = `Second Room ${id}`;
+      await createRoom(page, room1Name);
+      await createRoom(page, room2Name);
 
-      // Create another room first so we have somewhere to go
-      await createRoom(page, `Fallback Room ${id}`);
+      // We should be in the second room
+      await expect(page.getByRole('heading', { name: room2Name })).toBeVisible();
 
-      // Navigate back to Landing Zone
-      await page.click(`a[href*="/chat/landing-zone"]`);
-      await expect(page).toHaveURL(/\/chat\/landing-zone/);
-
-      // Leave the default room
+      // Leave the second room
       await page.getByTestId('room-menu-button').click();
       await page.getByTestId('leave-room-button').click();
       await page.getByTestId('leave-room-confirm').click();
 
-      // Should be redirected to the fallback room with Landing Zone removed from sidebar
-      await expect(page).toHaveURL(/\/chat\/fallback-room-/);
-      await expect(page.locator(`a[href*="/chat/landing-zone"]`)).not.toBeVisible();
+      // Should be redirected to the first room
+      await expect(page).toHaveURL(/\/chat\/first-room-/);
+      await expect(page.getByRole('heading', { name: room1Name })).toBeVisible();
     });
 
     test('leaving all rooms shows No Rooms Yet screen', async ({ page }) => {
       const id = uniqueId();
       await createUserAndSignIn(page, 'No Rooms User', id);
 
-      // Should be in Landing Zone (default room)
-      await expect(page).toHaveURL(/\/chat\/landing-zone/);
+      // Create a single room
+      const roomName = `Only Room ${id}`;
+      await createRoom(page, roomName);
+      await expect(page).toHaveURL(/\/chat\/only-room-/);
 
-      // Leave the default room (user's only room)
+      // Leave the only room
       await page.getByTestId('room-menu-button').click();
       await page.getByTestId('leave-room-button').click();
       await page.getByTestId('leave-room-confirm').click();
@@ -188,7 +190,7 @@ test.describe('Leave Room', () => {
       const id = uniqueId();
       await createUserAndSignIn(page, 'Leave Private User', id);
 
-      // Create a private room
+      // Create a private room (this will be the user's only room)
       const roomName = `Leave Private Test ${id}`;
       await createRoom(page, roomName, true);
       await page.waitForURL(/\/chat\/leave-private-test-/);
@@ -198,8 +200,8 @@ test.describe('Leave Room', () => {
       await page.getByTestId('leave-room-button').click();
       await page.getByTestId('leave-room-confirm').click();
 
-      // Should be redirected and room removed from sidebar
-      await expect(page).toHaveURL(/\/chat\/landing-zone/);
+      // Should be redirected to /chat (no rooms left) and room removed from sidebar
+      await expect(page).toHaveURL(/\/chat$/);
       await expect(page.locator('nav').getByText(roomName)).not.toBeVisible();
     });
   });

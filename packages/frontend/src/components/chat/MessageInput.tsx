@@ -28,7 +28,14 @@ export function MessageInput({ roomSlug }: MessageInputProps) {
     uploadAll,
     isUploading,
     canAddMore,
+    validationError,
+    clearValidationError,
   } = useImageUpload(roomSlug);
+
+  useEffect(() => {
+    // Focus input when entering a room
+    inputRef.current?.focus();
+  }, [roomSlug]);
 
   useEffect(() => {
     return () => {
@@ -179,6 +186,26 @@ export function MessageInput({ roomSlug }: MessageInputProps) {
       {/* Image preview */}
       <ImagePreview images={pendingImages} onRemove={removeImage} />
 
+      {/* Validation error message */}
+      {validationError && (
+        <div
+          className="flex items-center justify-between gap-2 px-4 py-2 bg-red-50 border-t border-red-200 text-red-700 text-sm"
+          data-testid="image-validation-error"
+        >
+          <span>{validationError}</span>
+          <button
+            type="button"
+            onClick={clearValidationError}
+            className="text-red-500 hover:text-red-700"
+            aria-label="Dismiss error"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       <div className="p-4">
         <div className="flex gap-3 items-end">
           {/* Image upload button */}
@@ -202,6 +229,7 @@ export function MessageInput({ roomSlug }: MessageInputProps) {
                        transition-colors duration-200"
             style={{ maxHeight: '120px' }}
             disabled={isSending || isUploading}
+            data-testid="message-input"
           />
           <button
             type="submit"
@@ -210,6 +238,7 @@ export function MessageInput({ roomSlug }: MessageInputProps) {
                        flex items-center justify-center
                        hover:bg-forest-light transition-colors duration-200
                        disabled:opacity-50 disabled:cursor-not-allowed"
+            data-testid="message-send-button"
           >
             {isSending || isUploading ? (
               <div className="spinner w-5 h-5" />

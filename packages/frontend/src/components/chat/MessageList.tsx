@@ -35,7 +35,7 @@ export function MessageList({ roomSlug }: MessageListProps) {
 
   if (messages.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center h-full" data-testid="message-list-empty">
         <div className="text-center">
           <p className="text-stone text-lg">No messages yet</p>
           <p className="text-stone-400 text-sm mt-1">Be the first to say hello!</p>
@@ -45,7 +45,7 @@ export function MessageList({ roomSlug }: MessageListProps) {
   }
 
   return (
-    <div className="h-full overflow-y-auto px-6 py-4 space-y-4">
+    <div className="h-full overflow-y-auto px-6 py-4 space-y-4" data-testid="message-list">
       {messages.map((message, index) => {
         const isOwn = message.metadata?.userId === session?.user?.id;
         const showAvatar =

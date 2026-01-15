@@ -109,22 +109,40 @@ async function convertToWebP(file: File, maxDimension = 2048): Promise<File> {
 
 export function useImageUpload(roomSlug: string) {
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const clearValidationError = useCallback(() => {
+    setValidationError(null);
+  }, []);
 
   const addImages = useCallback(
     async (files: File[]) => {
-      // Filter valid files
+      // Clear any previous validation error
+      setValidationError(null);
+
+      // Filter valid files and collect validation errors
+      const invalidTypeFiles: string[] = [];
+      const tooLargeFiles: string[] = [];
+
       const validFiles = files.filter((file) => {
         if (!ALLOWED_TYPES.includes(file.type)) {
-          console.warn(`Invalid file type: ${file.type}`);
+          invalidTypeFiles.push(file.name);
           return false;
         }
         if (file.size > MAX_IMAGE_SIZE_BYTES * 2) {
           // Allow 2x since we'll compress
-          console.warn(`File too large: ${file.name}`);
+          tooLargeFiles.push(file.name);
           return false;
         }
         return true;
       });
+
+      // Set validation error if any files were rejected
+      if (invalidTypeFiles.length > 0) {
+        setValidationError(`Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.`);
+      } else if (tooLargeFiles.length > 0) {
+        setValidationError(`File too large. Maximum size is 10MB.`);
+      }
 
       // Limit total images
       const remainingSlots = MAX_IMAGES_PER_MESSAGE - pendingImages.length;
@@ -254,5 +272,7 @@ export function useImageUpload(roomSlug: string) {
     isUploading,
     hasErrors,
     canAddMore: pendingImages.length < MAX_IMAGES_PER_MESSAGE,
+    validationError,
+    clearValidationError,
   };
 }

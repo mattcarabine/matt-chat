@@ -17,7 +17,7 @@ export function MessageImages({ images, roomSlug }: MessageImagesProps) {
 
   return (
     <>
-      <div className={`grid ${gridCols} gap-2 mt-2`}>
+      <div className={`grid ${gridCols} gap-2 mt-2`} data-testid="message-images">
         {images.map((image, index) => (
           <ImageThumbnail
             key={image.key}

@@ -34,6 +34,7 @@ function LightboxImage({ image, roomSlug }: { image: MessageImage; roomSlug: str
         alt={image.originalName}
         className={`max-w-full max-h-full object-contain ${loaded ? '' : 'opacity-0'}`}
         onLoad={() => setLoaded(true)}
+        data-testid="image-lightbox-image"
       />
     </div>
   );
@@ -83,12 +84,14 @@ export function ImageLightbox({ images, roomSlug, initialIndex, onClose }: Image
     <div
       className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
       onClick={onClose}
+      data-testid="image-lightbox"
     >
       <button
         type="button"
         onClick={onClose}
         className="absolute top-4 right-4 text-white/70 hover:text-white p-2 z-10"
         aria-label="Close"
+        data-testid="image-lightbox-close"
       >
         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

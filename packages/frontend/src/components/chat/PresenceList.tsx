@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useChatPresence } from '@/hooks/useChat';
 import { useRoomMembers } from '@/hooks/useRooms';
 import { PresenceItem } from './PresenceItem';
@@ -21,10 +21,27 @@ interface PresenceListProps {
 export function PresenceList({ roomSlug, isPrivateRoom = false }: PresenceListProps) {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const { users: onlineUsers, isLoading: presenceLoading } = useChatPresence();
-  const { data: membersData, isLoading: membersLoading } = useRoomMembers(roomSlug);
+  const { data: membersData, isLoading: membersLoading, refetch } = useRoomMembers(roomSlug);
   const { data: session } = useSession();
+  const lastRefetchRef = useRef<number>(0);
 
   const isLoading = presenceLoading || membersLoading;
+
+  // Refetch member list when new users appear in presence who aren't in our member list
+  // This enables real-time presence updates when new users join the room
+  useEffect(() => {
+    if (!membersData || presenceLoading) return;
+
+    const memberIds = new Set(membersData.members.map((m) => m.id));
+    const hasUnknownOnlineUser = onlineUsers.some((u) => !memberIds.has(u.userId));
+
+    // Throttle refetches to avoid hammering the API
+    const now = Date.now();
+    if (hasUnknownOnlineUser && now - lastRefetchRef.current > 2000) {
+      lastRefetchRef.current = now;
+      refetch();
+    }
+  }, [onlineUsers, membersData, presenceLoading, refetch]);
 
   if (isLoading) {
     return (
@@ -50,7 +67,7 @@ export function PresenceList({ roomSlug, isPrivateRoom = false }: PresenceListPr
   const offlineMembers = members.filter((m) => !onlineUserIds.has(m.id));
 
   return (
-    <div className="p-4">
+    <div className="p-4" data-testid="presence-list">
       {/* Invite button for private rooms */}
       {isPrivateRoom && (
         <button
@@ -66,12 +83,13 @@ export function PresenceList({ roomSlug, isPrivateRoom = false }: PresenceListPr
       <h3
         className="text-sm font-medium text-stone uppercase tracking-wide mb-3"
         style={{ letterSpacing: '0.05em' }}
+        data-testid="presence-online-count"
       >
         Online ({onlineMembers.length})
       </h3>
-      <div className="space-y-1 mb-6">
+      <div className="space-y-1 mb-6" data-testid="presence-online-section">
         {onlineMembers.length === 0 ? (
-          <p className="text-xs text-stone/60 italic">No one online</p>
+          <p className="text-xs text-stone/60 italic" data-testid="presence-empty-online">No one online</p>
         ) : (
           onlineMembers.map((member) => (
             <PresenceItem
@@ -88,12 +106,13 @@ export function PresenceList({ roomSlug, isPrivateRoom = false }: PresenceListPr
       <h3
         className="text-sm font-medium text-stone uppercase tracking-wide mb-3"
         style={{ letterSpacing: '0.05em' }}
+        data-testid="presence-offline-count"
       >
         Offline ({offlineMembers.length})
       </h3>
-      <div className="space-y-1">
+      <div className="space-y-1" data-testid="presence-offline-section">
         {offlineMembers.length === 0 ? (
-          <p className="text-xs text-stone/60 italic">Everyone's online!</p>
+          <p className="text-xs text-stone/60 italic" data-testid="presence-empty-offline">Everyone's online!</p>
         ) : (
           offlineMembers.map((member) => (
             <PresenceItem

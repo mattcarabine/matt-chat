@@ -14,12 +14,12 @@ export function TypingIndicator() {
   const { typingUsers } = useChatTyping();
 
   if (typingUsers.length === 0) {
-    return <div className="h-6 px-6" />;
+    return <div data-testid="typing-indicator-empty" className="h-6 px-6" />;
   }
 
   return (
-    <div className="h-6 px-6 flex items-center gap-2">
-      <div className="flex gap-1">
+    <div data-testid="typing-indicator" className="h-6 px-6 flex items-center gap-2">
+      <div data-testid="typing-indicator-dots" className="flex gap-1">
         <span
           className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce"
           style={{ animationDelay: '0ms' }}
@@ -33,7 +33,7 @@ export function TypingIndicator() {
           style={{ animationDelay: '300ms' }}
         />
       </div>
-      <span className="text-xs text-stone-400">{formatTypingText(typingUsers)}</span>
+      <span data-testid="typing-indicator-text" className="text-xs text-stone-400">{formatTypingText(typingUsers)}</span>
     </div>
   );
 }

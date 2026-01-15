@@ -50,6 +50,7 @@ export function ImageThumbnail({ image, roomSlug, onClick }: ImageThumbnailProps
       type="button"
       onClick={onClick}
       className="block rounded-lg overflow-hidden hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-forest"
+      data-testid="message-image-thumbnail"
     >
       {showSkeleton && (
         <div className="bg-stone-200 animate-pulse rounded-lg" style={skeletonStyle} />

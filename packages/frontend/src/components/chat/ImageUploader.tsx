@@ -35,6 +35,7 @@ export function ImageUploader({ onFilesSelected, disabled, canAddMore }: ImageUp
         multiple
         onChange={handleChange}
         className="hidden"
+        data-testid="image-upload-input"
       />
       <button
         type="button"
@@ -45,6 +46,7 @@ export function ImageUploader({ onFilesSelected, disabled, canAddMore }: ImageUp
                    transition-colors duration-200
                    disabled:opacity-50 disabled:cursor-not-allowed"
         title={canAddMore ? 'Add images' : 'Maximum images reached'}
+        data-testid="image-upload-button"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path

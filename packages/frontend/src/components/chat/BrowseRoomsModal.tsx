@@ -52,7 +52,7 @@ function EmptyState({ icon, title, subtitle }: EmptyStateProps) {
 
 function RoomSearchItem({ room, onJoin, isJoining }: { room: RoomSearchResult; onJoin: (slug: string) => void; isJoining: boolean }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3 hover:bg-sand-100 dark:hover:bg-sand-800/50 transition-colors">
+    <div data-testid={`browse-room-${room.slug}`} className="flex items-center gap-3 px-4 py-3 hover:bg-sand-100 dark:hover:bg-sand-800/50 transition-colors">
       <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-sand-200 dark:bg-sand-700 flex items-center justify-center">
         <HashIcon className="w-5 h-5 text-sand-500 dark:text-sand-400" />
       </div>
@@ -60,15 +60,16 @@ function RoomSearchItem({ room, onJoin, isJoining }: { room: RoomSearchResult; o
       <div className="flex-1 min-w-0">
         <p className="font-medium text-sm text-sand-900 dark:text-sand-50 truncate">{room.name}</p>
         {room.description && <p className="text-xs text-sand-500 dark:text-sand-400 truncate mt-0.5">{room.description}</p>}
-        <p className="text-xs text-sand-400 dark:text-sand-500 mt-0.5">
+        <p data-testid={`browse-room-${room.slug}-member-count`} className="text-xs text-sand-400 dark:text-sand-500 mt-0.5">
           {room.memberCount} {room.memberCount === 1 ? 'member' : 'members'}
         </p>
       </div>
 
       {room.isMember ? (
-        <span className="text-xs text-ember-600 dark:text-ember-400 font-medium px-2 py-1 bg-ember-50 dark:bg-ember-500/10 rounded-md">Joined</span>
+        <span data-testid={`browse-room-${room.slug}-joined`} className="text-xs text-ember-600 dark:text-ember-400 font-medium px-2 py-1 bg-ember-50 dark:bg-ember-500/10 rounded-md">Joined</span>
       ) : (
         <button
+          data-testid={`browse-room-${room.slug}-join`}
           onClick={() => onJoin(room.slug)}
           disabled={isJoining}
           className="px-3 py-1.5 text-xs font-medium text-white bg-ember-500 rounded-md hover:bg-ember-600 transition-colors disabled:opacity-50"
@@ -118,7 +119,7 @@ export function BrowseRoomsModal({ isOpen, onClose }: BrowseRoomsModalProps) {
       />
 
       {/* Modal */}
-      <div className="relative bg-sand-50 dark:bg-sand-900 rounded-xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden max-h-[80vh] flex flex-col border border-sand-200 dark:border-sand-700">
+      <div data-testid="browse-rooms-modal" className="relative bg-sand-50 dark:bg-sand-900 rounded-xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden max-h-[80vh] flex flex-col border border-sand-200 dark:border-sand-700">
         {/* Header */}
         <div className="flex-shrink-0 px-6 py-4 border-b border-sand-200 dark:border-sand-700">
           <h2 className="font-display font-semibold text-xl text-sand-900 dark:text-sand-50">Browse Rooms</h2>
@@ -131,6 +132,7 @@ export function BrowseRoomsModal({ isOpen, onClose }: BrowseRoomsModalProps) {
           <div className="relative">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sand-500 dark:text-sand-400" />
             <input
+              data-testid="browse-rooms-search"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

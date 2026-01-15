@@ -1,36 +1,14 @@
-import { test, expect, Page } from '@playwright/test';
-
-// Generate unique identifiers for each test run
-const uniqueId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-
-// Helper to create a user and navigate to chat
-async function createUserAndSignIn(page: Page, name: string, id: string) {
-  await page.goto('/signup');
-  await page.getByTestId('signup-fullname').fill(name);
-  await page.getByTestId('signup-username').fill(`user${id}`);
-  await page.getByTestId('signup-email').fill(`user${id}@e2e-test.local`);
-  await page.getByTestId('signup-password').fill('password123');
-  await page.getByTestId('signup-submit').click();
-  await expect(page).toHaveURL(/\/chat\//);
-}
-
-// Helper to sign out via dropdown menu
-async function signOut(page: Page) {
-  await page.getByTestId('user-menu-button').click();
-  await page.getByTestId('signout-button').click();
-}
+import { test, expect } from '@playwright/test';
+import {
+  uniqueId,
+  setE2eCookie,
+  createUserAndSignIn,
+  signOut,
+} from './utils/helpers';
 
 test.describe('Private Rooms', () => {
-  // Set e2e_mode cookie so backend includes test users
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([
-      {
-        name: 'e2e_mode',
-        value: 'true',
-        domain: 'localhost',
-        path: '/',
-      },
-    ]);
+    await setE2eCookie(context);
   });
 
   test.describe('Creating Private Rooms', () => {
@@ -112,9 +90,7 @@ test.describe('Private Rooms', () => {
 
       // Create second user in a new context
       const context2 = await browser.newContext();
-      await context2.addCookies([
-        { name: 'e2e_mode', value: 'true', domain: 'localhost', path: '/' },
-      ]);
+      await setE2eCookie(context2);
       const page2 = await context2.newPage();
       const id2 = uniqueId();
       await createUserAndSignIn(page2, 'Invitee User', id2);
@@ -167,9 +143,7 @@ test.describe('Private Rooms', () => {
 
       // Create second user
       const context2 = await browser.newContext();
-      await context2.addCookies([
-        { name: 'e2e_mode', value: 'true', domain: 'localhost', path: '/' },
-      ]);
+      await setE2eCookie(context2);
       const page2 = await context2.newPage();
       const id2 = uniqueId();
       await createUserAndSignIn(page2, 'Decliner User', id2);
@@ -210,9 +184,7 @@ test.describe('Private Rooms', () => {
 
       // Create second user
       const context2 = await browser.newContext();
-      await context2.addCookies([
-        { name: 'e2e_mode', value: 'true', domain: 'localhost', path: '/' },
-      ]);
+      await setE2eCookie(context2);
       const page2 = await context2.newPage();
       const id2 = uniqueId();
       await createUserAndSignIn(page2, 'Badge User', id2);

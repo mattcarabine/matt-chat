@@ -25,7 +25,7 @@ export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageIte
   const hasImages = images && images.length > 0;
 
   return (
-    <div className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`}>
+    <div className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`} data-testid="message-item">
       {/* Avatar */}
       <div className={`flex-shrink-0 ${showAvatar ? '' : 'invisible'}`}>
         <div
@@ -45,7 +45,7 @@ export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageIte
           <div
             className={`flex items-center gap-2 mb-1 ${isOwn ? 'flex-row-reverse' : ''}`}
           >
-            <span className="text-sm font-medium text-charcoal">
+            <span className="text-sm font-medium text-charcoal" data-testid="message-sender">
               {displayName}
             </span>
             <span className="text-xs text-stone-400">{timeString}</span>
@@ -61,7 +61,7 @@ export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageIte
                 : 'bg-cream-dark text-charcoal rounded-tl-sm'
             }`}
           >
-            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words" data-testid="message-text">
               {textContent}
             </p>
           </div>

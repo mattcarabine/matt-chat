@@ -13,6 +13,7 @@ project. The patterns you establish will be copied. The corners
 you cut will be cut again.
 Fight entropy. Leave the codebase better than you found it.
 All changes must be well tested, if tests do not exist, you must add them
+**Every user-facing feature requires E2E test coverage before it's considered complete.**
 
 Use code-simplifier to simplify any code you write before finishing.
 
@@ -94,9 +95,65 @@ myRoutes.get('/example', async (c) => {
 
 ## E2E Testing
 
-- **Test user email domain**: All e2e test users use `@e2e-test.local` emails to distinguish them from real users
-- **e2e_mode cookie**: Tests set an `e2e_mode=true` cookie so the backend includes test users in API responses (e.g., room member lists)
-- **Production filtering**: Without the cookie, the backend filters out `@e2e-test.local` users at the database level, keeping test data hidden from real users
+Tests live in `packages/frontend/e2e/` using Playwright.
+
+### Structure
+```
+e2e/
+  utils/
+    helpers.ts          # Shared utilities (login, createRoom, etc.)
+    fixtures.ts         # Custom test fixtures if needed
+  auth/                 # Auth flow tests
+  chat/                 # Chat feature tests
+  rooms/                # Room CRUD tests
+  invitations/          # Invitation flow tests
+```
+
+### Test User Convention
+- **Email domain**: All test users use `@e2e-test.local` emails
+- **e2e_mode cookie**: Tests set `e2e_mode=true` cookie so backend includes test users in responses
+- **Production filtering**: Without cookie, `@e2e-test.local` users filtered at DB level
+
+### Writing Tests
+
+**Always use helpers for repeated actions:**
+```typescript
+import { loginAsNewUser, createRoom, sendMessage } from '../utils/helpers';
+
+test('user can send message in room', async ({ page }) => {
+  const user = await loginAsNewUser(page);
+  const room = await createRoom(page, { name: 'Test Room' });
+  await sendMessage(page, 'Hello world');
+  await expect(page.getByText('Hello world')).toBeVisible();
+});
+```
+
+**Selector priority:**
+1. `data-testid` attributes (preferred)
+2. Accessible roles: `getByRole('button', { name: 'Send' })`
+3. Text content: `getByText('Join Room')`
+4. CSS selectors (last resort)
+
+**Required patterns:**
+- Unique test data per test (use timestamps/random suffixes)
+- Clean up created resources when possible
+- No hardcoded waits - use Playwright's auto-waiting
+- Tests must be independent and parallelizable
+
+### Adding data-testid
+
+When implementing features, add `data-testid` to interactive elements:
+```tsx
+Send
+
+```
+
+### Commands
+```bash
+pnpm test:e2e              # Run all E2E tests
+pnpm test:e2e --ui         # Interactive UI mode
+pnpm test:e2e auth/        # Run specific folder
+```
 
 ## Environment
 

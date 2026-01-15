@@ -67,6 +67,8 @@ function RoomItem({ room, isActive }: { room: RoomListItem; isActive: boolean })
   return (
     <Link
       to={`/chat/${room.slug}`}
+      data-testid={`room-item-${room.slug}`}
+      data-active={isActive}
       className={`
         group relative flex items-center gap-3 px-3 py-2.5 rounded-sm
         transition-all duration-200 ease-out
@@ -135,7 +137,7 @@ export function RoomSidebar({ currentRoomSlug, onCreateRoom, onBrowseRooms }: Ro
   });
 
   return (
-    <aside className="w-56 h-full flex flex-col bg-cream border-r border-stone-300/50">
+    <aside data-testid="room-sidebar" className="w-56 h-full flex flex-col bg-cream border-r border-stone-300/50">
       {/* Header with actions */}
       <div className="flex-shrink-0 p-3 border-b border-stone-300/30">
         <div className="flex items-center justify-between mb-3">

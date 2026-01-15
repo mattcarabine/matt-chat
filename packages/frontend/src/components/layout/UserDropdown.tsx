@@ -52,10 +52,10 @@ export function UserDropdown(): JSX.Element {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-56 glass rounded-xl shadow-xl py-1 z-50 animate-fade-up">
           {/* User info header */}
-          <div className="px-4 py-3 border-b border-sand-200 dark:border-sand-700">
-            <p className="text-sm font-medium text-sand-900 dark:text-sand-50 truncate">{fullName}</p>
+          <div className="px-4 py-3 border-b border-sand-200 dark:border-sand-700" data-testid="user-dropdown-info">
+            <p className="text-sm font-medium text-sand-900 dark:text-sand-50 truncate" data-testid="user-dropdown-name">{fullName}</p>
             {user?.email && (
-              <p className="text-xs text-sand-500 dark:text-sand-400 truncate">{user.email}</p>
+              <p className="text-xs text-sand-500 dark:text-sand-400 truncate" data-testid="user-dropdown-email">{user.email}</p>
             )}
           </div>
 
@@ -65,6 +65,7 @@ export function UserDropdown(): JSX.Element {
               to="/profile"
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-800/50 transition-colors"
+              data-testid="user-dropdown-profile"
             >
               <UserIcon className="w-4 h-4 text-sand-500 dark:text-sand-400" />
               Profile
@@ -74,6 +75,7 @@ export function UserDropdown(): JSX.Element {
               to="/profile?tab=settings"
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-sand-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-sand-800/50 transition-colors"
+              data-testid="user-dropdown-settings"
             >
               <SettingsIcon className="w-4 h-4 text-sand-500 dark:text-sand-400" />
               Settings

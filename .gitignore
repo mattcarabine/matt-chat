@@ -5,6 +5,7 @@ node_modules/
 dist/
 build/
 .next/
+.pnpm-store/
 
 # Environment files
 .env

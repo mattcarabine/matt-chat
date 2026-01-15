@@ -8,6 +8,7 @@ import { ConnectionStatus } from './ConnectionStatus';
 import { RoomHeaderDropdown } from './RoomHeaderDropdown';
 import { LeaveRoomModal } from './LeaveRoomModal';
 import { InviteUserModal } from './InviteUserModal';
+import { OnlineCount } from './OnlineCount';
 
 interface ChatRoomProps {
   roomId: string;
@@ -30,6 +31,7 @@ export function ChatRoom({ roomId, roomName, isPublic, onLeaveSuccess }: ChatRoo
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 rounded-full bg-forest animate-pulse" />
               <h2 className="font-serif text-xl text-charcoal">{roomName}</h2>
+              <OnlineCount roomSlug={roomId} />
             </div>
             <div className="flex items-center gap-2">
               <ConnectionStatus />

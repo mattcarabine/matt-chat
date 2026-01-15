@@ -1,42 +1,14 @@
-import { test, expect, Page } from '@playwright/test';
-
-// Generate unique identifiers for each test run
-const uniqueId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-
-// Helper to create a user and navigate to chat
-async function createUserAndSignIn(page: Page, name: string, id: string) {
-  await page.goto('/signup');
-  await page.getByTestId('signup-fullname').fill(name);
-  await page.getByTestId('signup-username').fill(`user${id}`);
-  await page.getByTestId('signup-email').fill(`user${id}@e2e-test.local`);
-  await page.getByTestId('signup-password').fill('password123');
-  await page.getByTestId('signup-submit').click();
-  await expect(page).toHaveURL(/\/chat\//);
-}
-
-// Helper to create a room
-async function createRoom(page: Page, roomName: string, isPrivate = false) {
-  await page.click('button:has-text("Create")');
-  await page.fill('input#room-name', roomName);
-  if (isPrivate) {
-    await page.check('input[type="checkbox"]');
-  }
-  await page.click('button:has-text("Create Room")');
-  // Wait for navigation to the new room
-  await page.waitForURL(/\/chat\//);
-}
+import { test, expect } from '@playwright/test';
+import {
+  uniqueId,
+  setE2eCookie,
+  createUserAndSignIn,
+  createRoom,
+} from './utils/helpers';
 
 test.describe('Leave Room', () => {
-  // Set e2e_mode cookie so backend includes test users
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([
-      {
-        name: 'e2e_mode',
-        value: 'true',
-        domain: 'localhost',
-        path: '/',
-      },
-    ]);
+    await setE2eCookie(context);
   });
 
   test.describe('Room Menu Dropdown', () => {

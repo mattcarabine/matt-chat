@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { useChatMessages } from '@/hooks/useChat';
+import { useCurrentDate } from '@/hooks/useCurrentDate';
+import { formatDateSeparator, isDifferentDay } from '@/lib/dateFormat';
 import { MessageItem } from './MessageItem';
+import { DateSeparator } from './DateSeparator';
 import { useSession } from '@/lib/auth-client';
 
 interface MessageListProps {
@@ -11,6 +14,7 @@ export function MessageList({ roomSlug }: MessageListProps) {
   const { messages, isLoading, error } = useChatMessages();
   const { data: session } = useSession();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const currentDate = useCurrentDate();
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -48,18 +52,29 @@ export function MessageList({ roomSlug }: MessageListProps) {
     <div className="h-full overflow-y-auto px-6 py-4 space-y-4" data-testid="message-list">
       {messages.map((message, index) => {
         const isOwn = message.metadata?.userId === session?.user?.id;
+        const prevMessage = messages[index - 1];
         const showAvatar =
+          index === 0 || prevMessage?.metadata?.userId !== message.metadata?.userId;
+
+        // Show date separator for first message or when day changes
+        const showDateSeparator =
           index === 0 ||
-          messages[index - 1]?.metadata?.userId !== message.metadata?.userId;
+          (prevMessage && isDifferentDay(prevMessage.timestamp, message.timestamp));
 
         return (
-          <MessageItem
-            key={message.id}
-            message={message}
-            isOwn={isOwn}
-            showAvatar={showAvatar}
-            roomSlug={roomSlug}
-          />
+          <div key={message.id}>
+            {showDateSeparator && (
+              <DateSeparator
+                label={formatDateSeparator(message.timestamp, currentDate)}
+              />
+            )}
+            <MessageItem
+              message={message}
+              isOwn={isOwn}
+              showAvatar={showAvatar}
+              roomSlug={roomSlug}
+            />
+          </div>
         );
       })}
       <div ref={bottomRef} />

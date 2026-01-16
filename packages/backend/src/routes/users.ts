@@ -61,11 +61,13 @@ usersRoutes.get('/:id/profile', async (c) => {
       : userData.fullName;
 
   return c.json({
-    id: userData.id,
-    fullName: userData.fullName,
-    username: userData.displayUsername || userData.username || null,
-    displayName,
-    createdAt: userData.createdAt.toISOString(),
+    user: {
+      id: userData.id,
+      fullName: userData.fullName,
+      username: userData.displayUsername || userData.username || null,
+      displayName,
+      createdAt: userData.createdAt.toISOString(),
+    },
   });
 });
 

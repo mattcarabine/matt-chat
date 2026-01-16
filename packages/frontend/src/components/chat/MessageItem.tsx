@@ -1,5 +1,6 @@
 import type { ChatMessage } from '@app/shared';
 import { MessageImages } from './MessageImages';
+import { UserProfileTrigger } from '@/components/UserProfileTrigger';
 
 // Placeholder used for image-only messages (Ably requires non-empty text)
 const IMAGE_ONLY_PLACEHOLDER = '\u200B';
@@ -28,13 +29,16 @@ export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageIte
     <div className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`} data-testid="message-item">
       {/* Avatar */}
       <div className={`flex-shrink-0 ${showAvatar ? '' : 'invisible'}`}>
-        <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center text-cream font-serif text-lg ${
-            isOwn ? 'bg-forest' : 'bg-terracotta'
-          }`}
-        >
-          {displayName.charAt(0).toUpperCase()}
-        </div>
+        <UserProfileTrigger userId={message.clientId}>
+          <div
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-cream font-serif text-lg ${
+              isOwn ? 'bg-forest' : 'bg-terracotta'
+            }`}
+            data-testid="message-avatar"
+          >
+            {displayName.charAt(0).toUpperCase()}
+          </div>
+        </UserProfileTrigger>
       </div>
 
       {/* Message content */}
@@ -45,9 +49,11 @@ export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageIte
           <div
             className={`flex items-center gap-2 mb-1 ${isOwn ? 'flex-row-reverse' : ''}`}
           >
-            <span className="text-sm font-medium text-charcoal" data-testid="message-sender">
-              {displayName}
-            </span>
+            <UserProfileTrigger userId={message.clientId}>
+              <span className="text-sm font-medium text-charcoal" data-testid="message-sender">
+                {displayName}
+              </span>
+            </UserProfileTrigger>
             <span className="text-xs text-stone-400">{timeString}</span>
           </div>
         )}

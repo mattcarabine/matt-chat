@@ -94,6 +94,7 @@ export function PresenceList({ roomSlug, isPrivateRoom = false }: PresenceListPr
           onlineMembers.map((member) => (
             <PresenceItem
               key={member.id}
+              userId={member.id}
               displayName={member.displayName}
               isCurrentUser={member.id === session?.user?.id}
               isOnline
@@ -117,6 +118,7 @@ export function PresenceList({ roomSlug, isPrivateRoom = false }: PresenceListPr
           offlineMembers.map((member) => (
             <PresenceItem
               key={member.id}
+              userId={member.id}
               displayName={member.displayName}
               isCurrentUser={member.id === session?.user?.id}
               isOnline={false}

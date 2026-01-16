@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(git -C /Users/matt/chat log --oneline -5)",
+      "Bash(git -C /Users/matt/chat status)",
+      "WebFetch(domain:orm.drizzle.team)",
+      "WebFetch(domain:openauth.js.org)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:dev.to)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Skill(frontend-design)",
+      "Bash(pnpm install)",
+      "Bash(npm --version:*)",
+      "Bash(git -C /Users/matt/chat status --short)",
+      "WebFetch(domain:www.better-auth.com)",
+      "WebFetch(domain:hono.dev)",
+      "WebFetch(domain:playwright.dev)",
+      "Bash(pnpm db:generate:*)",
+      "Bash(pnpm db:migrate:*)",
+      "Bash(timeout 5 pnpm dev:*)",
+      "Bash(pkill:*)",
+      "Bash(pnpm exec playwright:*)",
+      "Bash(pnpm test:e2e:*)",
+      "WebFetch(domain:ably.com)",
+      "Bash(curl:*)",
+      "WebFetch(domain:kentcdodds.com)",
+      "WebFetch(domain:uxcel.com)",
+      "Bash(lsof:*)",
+      "Bash(xargs sed -i '' 's/await page\\\\.click\\(''''button:has-text\\(\"\"Create Room\"\"\\)''''\\);/await page.getByTestId\\(''''create-room-submit''''\\).click\\(\\);/g')"
+    ]
+  }
+}

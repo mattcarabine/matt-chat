@@ -37,6 +37,38 @@ usersRoutes.get('/me/chat-info', async (c) => {
   });
 });
 
+usersRoutes.get('/:id/profile', async (c) => {
+  const userId = c.req.param('id');
+
+  // Fetch user data
+  const userData = await db.query.user.findFirst({
+    where: eq(user.id, userId),
+  });
+
+  if (!userData) {
+    return c.json({ error: 'User not found' }, 404);
+  }
+
+  // Fetch user preferences to compute displayName
+  const prefs = await db.query.userPreferences.findFirst({
+    where: eq(userPreferences.userId, userId),
+  });
+
+  const preference = prefs?.displayNamePreference ?? 'fullName';
+  const displayName =
+    preference === 'username'
+      ? userData.displayUsername || userData.username || userData.fullName
+      : userData.fullName;
+
+  return c.json({
+    id: userData.id,
+    fullName: userData.fullName,
+    username: userData.displayUsername || userData.username || null,
+    displayName,
+    createdAt: userData.createdAt.toISOString(),
+  });
+});
+
 usersRoutes.get('/search', async (c) => {
   const session = c.get('session');
 

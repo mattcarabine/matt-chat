@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { uniqueId, setE2eCookie, createUserAndSignIn } from './utils/helpers';
+import { uniqueId, setE2eCookie, createUserAndSignIn, createRoom, sendMessage, waitForMessageList } from './utils/helpers';
 
 test.describe('User Profile', () => {
   test.beforeEach(async ({ context }) => {
@@ -322,6 +322,161 @@ test.describe('User Profile', () => {
       await expect(page.getByTestId('profile-page-title')).toHaveText('Profile');
       // Profile tab doesn't add query param, so URL should be clean
       await expect(page).toHaveURL('/profile');
+    });
+  });
+
+  test.describe('Profile Popup', () => {
+    test('popup opens when clicking message avatar', async ({ page }) => {
+      const id = uniqueId();
+      const fullName = `Popup Avatar ${id}`;
+
+      await createUserAndSignIn(page, fullName, id);
+
+      // Create a room and send a message
+      await createRoom(page, `Popup Room ${id}`);
+      await waitForMessageList(page);
+      await sendMessage(page, `Test message ${id}`);
+
+      // Click on the avatar in the message
+      const messageItem = page.getByTestId('message-item').first();
+      await messageItem.locator('button').first().click();
+
+      // Verify popup appears with user info
+      await expect(page.getByTestId('user-profile-popover')).toBeVisible();
+      await expect(page.getByTestId('user-profile-name')).toHaveText(fullName);
+    });
+
+    test('popup opens when clicking message sender name', async ({ page }) => {
+      const id = uniqueId();
+      const fullName = `Popup Name ${id}`;
+
+      await createUserAndSignIn(page, fullName, id);
+
+      // Create a room and send a message
+      await createRoom(page, `Name Popup Room ${id}`);
+      await waitForMessageList(page);
+      await sendMessage(page, `Test message ${id}`);
+
+      // Click on the sender name in the message
+      const senderName = page.getByTestId('message-sender').first();
+      await senderName.click();
+
+      // Verify popup appears with user info
+      await expect(page.getByTestId('user-profile-popover')).toBeVisible();
+      await expect(page.getByTestId('user-profile-name')).toHaveText(fullName);
+    });
+
+    test('popup shows member since date', async ({ page }) => {
+      const id = uniqueId();
+      const fullName = `Popup Date ${id}`;
+
+      await createUserAndSignIn(page, fullName, id);
+
+      // Create a room and send a message
+      await createRoom(page, `Date Popup Room ${id}`);
+      await waitForMessageList(page);
+      await sendMessage(page, `Test message ${id}`);
+
+      // Click on the avatar to open popup
+      const messageItem = page.getByTestId('message-item').first();
+      await messageItem.locator('button').first().click();
+
+      // Verify popup shows member since
+      await expect(page.getByTestId('user-profile-popover')).toBeVisible();
+      await expect(page.getByTestId('user-profile-member-since')).toBeVisible();
+      // Verify it contains "Member since" text with a month/year
+      await expect(page.getByTestId('user-profile-member-since')).toContainText('Member since');
+    });
+
+    test('popup shows username when user has one', async ({ page }) => {
+      const id = uniqueId();
+      const fullName = `Popup Username ${id}`;
+      const expectedUsername = `user${id}`;
+
+      await createUserAndSignIn(page, fullName, id);
+
+      // Create a room and send a message
+      await createRoom(page, `Username Popup Room ${id}`);
+      await waitForMessageList(page);
+      await sendMessage(page, `Test message ${id}`);
+
+      // Click on the avatar to open popup
+      const messageItem = page.getByTestId('message-item').first();
+      await messageItem.locator('button').first().click();
+
+      // Verify popup shows username with @ prefix
+      await expect(page.getByTestId('user-profile-popover')).toBeVisible();
+      await expect(page.getByTestId('user-profile-username')).toHaveText(`@${expectedUsername}`);
+    });
+
+    test('popup closes when clicking outside', async ({ page }) => {
+      const id = uniqueId();
+      const fullName = `Popup Close ${id}`;
+
+      await createUserAndSignIn(page, fullName, id);
+
+      // Create a room and send a message
+      await createRoom(page, `Close Popup Room ${id}`);
+      await waitForMessageList(page);
+      await sendMessage(page, `Test message ${id}`);
+
+      // Click on the avatar to open popup
+      const messageItem = page.getByTestId('message-item').first();
+      await messageItem.locator('button').first().click();
+
+      // Verify popup is open
+      await expect(page.getByTestId('user-profile-popover')).toBeVisible();
+
+      // Click outside the popup (on the message list background)
+      await page.getByTestId('message-list').click({ position: { x: 10, y: 10 } });
+
+      // Verify popup is closed
+      await expect(page.getByTestId('user-profile-popover')).not.toBeVisible();
+    });
+
+    test('popup closes when pressing ESC', async ({ page }) => {
+      const id = uniqueId();
+      const fullName = `Popup ESC ${id}`;
+
+      await createUserAndSignIn(page, fullName, id);
+
+      // Create a room and send a message
+      await createRoom(page, `ESC Popup Room ${id}`);
+      await waitForMessageList(page);
+      await sendMessage(page, `Test message ${id}`);
+
+      // Click on the avatar to open popup
+      const messageItem = page.getByTestId('message-item').first();
+      await messageItem.locator('button').first().click();
+
+      // Verify popup is open
+      await expect(page.getByTestId('user-profile-popover')).toBeVisible();
+
+      // Press ESC
+      await page.keyboard.press('Escape');
+
+      // Verify popup is closed
+      await expect(page.getByTestId('user-profile-popover')).not.toBeVisible();
+    });
+
+    test('popup opens from presence list and shows online status', async ({ page }) => {
+      const id = uniqueId();
+      const fullName = `Popup Presence ${id}`;
+
+      await createUserAndSignIn(page, fullName, id);
+
+      // Create a room
+      await createRoom(page, `Presence Popup Room ${id}`);
+      await waitForMessageList(page);
+
+      // Click on the user in the presence list (online section)
+      const presenceItem = page.getByTestId('presence-item').first();
+      await presenceItem.click();
+
+      // Verify popup appears with online status
+      await expect(page.getByTestId('user-profile-popover')).toBeVisible();
+      await expect(page.getByTestId('user-profile-name')).toHaveText(fullName);
+      await expect(page.getByTestId('user-profile-status')).toHaveText('Online');
     });
   });
 });

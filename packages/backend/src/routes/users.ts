@@ -79,3 +79,32 @@ usersRoutes.get('/search', async (c) => {
     })),
   });
 });
+
+usersRoutes.get('/:id', async (c) => {
+  const { id } = c.req.param();
+
+  const foundUser = await db.query.user.findFirst({
+    where: eq(user.id, id),
+    columns: {
+      id: true,
+      fullName: true,
+      name: true,
+      username: true,
+      displayUsername: true,
+      createdAt: true,
+    },
+  });
+
+  if (!foundUser) {
+    return c.json({ error: 'User not found' }, 404);
+  }
+
+  return c.json({
+    user: {
+      id: foundUser.id,
+      displayName: foundUser.fullName || foundUser.name || 'Anonymous',
+      username: foundUser.displayUsername || foundUser.username || null,
+      createdAt: foundUser.createdAt.toISOString(),
+    },
+  });
+});

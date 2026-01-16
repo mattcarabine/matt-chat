@@ -1,11 +1,14 @@
+import { UserProfileTrigger } from './UserProfileTrigger';
+
 interface PresenceItemProps {
+  userId: string;
   displayName: string;
   isCurrentUser: boolean;
   isOnline?: boolean;
 }
 
-export function PresenceItem({ displayName, isCurrentUser, isOnline = true }: PresenceItemProps) {
-  return (
+export function PresenceItem({ userId, displayName, isCurrentUser, isOnline = true }: PresenceItemProps) {
+  const content = (
     <div className={`flex items-center gap-3 py-2 ${!isOnline ? 'opacity-50' : ''}`} data-testid="presence-item">
       <div className="relative">
         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-serif ${
@@ -28,5 +31,16 @@ export function PresenceItem({ displayName, isCurrentUser, isOnline = true }: Pr
         {isCurrentUser && <span className="text-stone-400 ml-1">(you)</span>}
       </span>
     </div>
+  );
+
+  return (
+    <UserProfileTrigger
+      userId={userId}
+      displayName={displayName}
+      isOnline={isOnline}
+      placement="left"
+    >
+      {content}
+    </UserProfileTrigger>
   );
 }

@@ -1,11 +1,17 @@
 import type { UserPublicProfile } from '@app/shared';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDmMutations } from '@/hooks/useDms';
+import { ChatIcon, SpinnerIcon } from '@/components/icons';
 
 interface UserProfilePopoverProps {
   user: UserPublicProfile;
   isOnline?: boolean;
   placement?: 'left' | 'right';
   onlineStatusSlot?: ReactNode;
+  currentUserId?: string;
+  onClose?: () => void;
 }
 
 function formatMemberSince(dateString: string): string {
@@ -21,8 +27,26 @@ export function UserProfilePopover({
   isOnline,
   placement = 'right',
   onlineStatusSlot,
+  currentUserId,
+  onClose,
 }: UserProfilePopoverProps) {
   const memberSince = formatMemberSince(user.createdAt);
+  const navigate = useNavigate();
+  const { createOrGetDm, isCreating } = useDmMutations();
+  const [error, setError] = useState<string | null>(null);
+
+  const isOwnProfile = currentUserId === user.id;
+
+  async function handleMessageClick(): Promise<void> {
+    setError(null);
+    try {
+      const result = await createOrGetDm({ participantIds: [user.id] });
+      navigate(`/dm/${result.dm.slug}`);
+      onClose?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start conversation');
+    }
+  }
 
   return (
     <div
@@ -81,6 +105,36 @@ export function UserProfilePopover({
           Member since {memberSince}
         </p>
       </div>
+
+      {/* Message button - only show if not viewing own profile */}
+      {!isOwnProfile && (
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={handleMessageClick}
+            disabled={isCreating}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-ember-500 hover:bg-ember-600 disabled:bg-ember-400 text-white rounded-lg font-medium transition-colors"
+            data-testid="user-profile-message-button"
+          >
+            {isCreating ? (
+              <>
+                <SpinnerIcon className="w-4 h-4" />
+                <span>Starting...</span>
+              </>
+            ) : (
+              <>
+                <ChatIcon className="w-4 h-4" />
+                <span>Message</span>
+              </>
+            )}
+          </button>
+          {error && (
+            <p className="mt-2 text-xs text-red-500 text-center" data-testid="user-profile-message-error">
+              {error}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

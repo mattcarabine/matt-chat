@@ -1,7 +1,14 @@
-export { ChatRoom } from './ChatRoom';
-export { RoomSidebar } from './RoomSidebar';
-export { CreateRoomModal } from './CreateRoomModal';
+export { AddDmMemberModal } from './AddDmMemberModal';
 export { BrowseRoomsModal } from './BrowseRoomsModal';
+export { ChatRoom } from './ChatRoom';
+export { CollapsibleSection } from './CollapsibleSection';
+export { ConvertDmToRoomModal } from './ConvertDmToRoomModal';
+export { CreateRoomModal } from './CreateRoomModal';
+export { DmHeaderDropdown } from './DmHeaderDropdown';
+export { DmItem } from './DmItem';
+export { DmRoom } from './DmRoom';
 export { InviteUserModal } from './InviteUserModal';
 export { LeaveRoomModal } from './LeaveRoomModal';
+export { NewDmModal } from './NewDmModal';
 export { RoomHeaderDropdown } from './RoomHeaderDropdown';
+export { RoomSidebar } from './RoomSidebar';

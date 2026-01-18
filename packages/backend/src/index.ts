@@ -12,6 +12,7 @@ import { usersRoutes } from './routes/users';
 import { roomsRoutes } from './routes/rooms';
 import { invitationsRoutes } from './routes/invitations';
 import { imagesRoutes } from './routes/images';
+import { dmRoutes } from './routes/dms';
 
 const app = new Hono<AppContext>();
 
@@ -36,6 +37,7 @@ app.route('/api/preferences', preferencesRoutes);
 app.route('/api/users', usersRoutes);
 app.route('/api/rooms', roomsRoutes);
 app.route('/api/invitations', invitationsRoutes);
+app.route('/api/dms', dmRoutes);
 app.route('/api', imagesRoutes);
 
 app.get('/api/me', (c) => {

@@ -66,11 +66,12 @@ roomsRoutes.get('/', async (c) => {
     },
   });
 
-  // Filter rooms based on E2E mode:
+  // Filter rooms based on E2E mode and exclude DMs:
   // - E2E mode: only show E2E rooms
   // - Production: only show non-E2E rooms
-  const filteredMemberships = memberships.filter((m) =>
-    isE2eMode ? m.room.isE2e : !m.room.isE2e
+  // - Always exclude DMs (they have their own endpoints)
+  const filteredMemberships = memberships.filter(
+    (m) => !m.room.isDm && (isE2eMode ? m.room.isE2e : !m.room.isE2e)
   );
 
   const roomsWithCounts = await Promise.all(
@@ -108,6 +109,7 @@ roomsRoutes.get('/search', async (c) => {
       where: and(
         eq(rooms.isPublic, true),
         eq(rooms.isE2e, isE2eMode),
+        eq(rooms.isDm, false),
         sql`(${rooms.name} LIKE ${searchPattern} OR ${rooms.description} LIKE ${searchPattern})`
       ),
       limit,
@@ -150,6 +152,7 @@ roomsRoutes.get('/search', async (c) => {
         eq(rooms.isPublic, true),
         eq(rooms.isDefault, false),
         eq(rooms.isE2e, isE2eMode),
+        eq(rooms.isDm, false),
         sql`${rooms.id} NOT IN (SELECT roomId FROM room_members WHERE userId = ${userId})`
       )
     )

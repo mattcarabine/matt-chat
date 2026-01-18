@@ -1,11 +1,17 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMyRooms } from '@/hooks/useRooms';
+import { useMyDms } from '@/hooks/useDms';
+import { CollapsibleSection } from './CollapsibleSection';
+import { DmItem } from './DmItem';
+import { NewDmModal } from './NewDmModal';
 import type { RoomListItem } from '@app/shared';
 
 interface RoomSidebarProps {
   currentRoomSlug: string;
-  onCreateRoom: () => void;
-  onBrowseRooms: () => void;
+  currentDmSlug?: string;
+  onCreateRoom?: () => void;
+  onBrowseRooms?: () => void;
 }
 
 interface IconProps {
@@ -105,10 +111,10 @@ function RoomItem({ room, isActive }: { room: RoomListItem; isActive: boolean })
   );
 }
 
-function LoadingSkeleton() {
+function LoadingSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div className="space-y-1 px-2">
-      {[...Array(4)].map((_, i) => (
+      {[...Array(count)].map((_, i) => (
         <div
           key={i}
           className="flex items-center gap-3 px-3 py-2.5"
@@ -125,9 +131,29 @@ function LoadingSkeleton() {
   );
 }
 
-export function RoomSidebar({ currentRoomSlug, onCreateRoom, onBrowseRooms }: RoomSidebarProps) {
-  const { data, isLoading, error } = useMyRooms();
-  const rooms = data?.rooms ?? [];
+function EmptyState({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle?: string }) {
+  return (
+    <div className="px-4 py-6 text-center">
+      <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-cream-dark flex items-center justify-center">
+        {icon}
+      </div>
+      <p className="text-sm text-stone">{title}</p>
+      {subtitle && <p className="text-xs text-stone/70 mt-1">{subtitle}</p>}
+    </div>
+  );
+}
+
+export function RoomSidebar({ currentRoomSlug, currentDmSlug, onCreateRoom, onBrowseRooms }: RoomSidebarProps) {
+  const navigate = useNavigate();
+  const [isNewDmModalOpen, setIsNewDmModalOpen] = useState(false);
+
+  // Rooms data
+  const { data: roomsData, isLoading: isLoadingRooms, error: roomsError } = useMyRooms();
+  const rooms = roomsData?.rooms ?? [];
+
+  // DMs data
+  const { data: dmsData, isLoading: isLoadingDms, error: dmsError } = useMyDms();
+  const dms = dmsData?.dms ?? [];
 
   // Sort rooms: default room first, then alphabetically
   const sortedRooms = [...rooms].sort((a, b) => {
@@ -136,78 +162,149 @@ export function RoomSidebar({ currentRoomSlug, onCreateRoom, onBrowseRooms }: Ro
     return a.name.localeCompare(b.name);
   });
 
+  // Sort DMs alphabetically by first participant's display name
+  const sortedDms = [...dms].sort((a, b) => {
+    const aName = a.participants[0]?.displayName ?? '';
+    const bName = b.participants[0]?.displayName ?? '';
+    return aName.localeCompare(bName);
+  });
+
+  const handleDmCreated = (dm: { slug: string }) => {
+    navigate(`/dm/${dm.slug}`);
+  };
+
+  const roomActions = (
+    <>
+      {onCreateRoom && (
+        <button
+          onClick={onCreateRoom}
+          data-testid="create-room-button"
+          className="p-1.5 text-sand-500 dark:text-sand-400 hover:text-forest hover:bg-sand-100 dark:hover:bg-sand-800 rounded transition-colors"
+          title="Create room"
+        >
+          <PlusIcon />
+        </button>
+      )}
+      {onBrowseRooms && (
+        <button
+          onClick={onBrowseRooms}
+          data-testid="browse-rooms-button"
+          className="p-1.5 text-sand-500 dark:text-sand-400 hover:text-forest hover:bg-sand-100 dark:hover:bg-sand-800 rounded transition-colors"
+          title="Browse rooms"
+        >
+          <SearchIcon />
+        </button>
+      )}
+    </>
+  );
+
+  const dmActions = (
+    <button
+      onClick={() => setIsNewDmModalOpen(true)}
+      data-testid="new-dm-button"
+      className="p-1.5 text-sand-500 dark:text-sand-400 hover:text-forest hover:bg-sand-100 dark:hover:bg-sand-800 rounded transition-colors"
+      title="New message"
+    >
+      <PlusIcon />
+    </button>
+  );
+
   return (
-    <aside data-testid="room-sidebar" className="w-56 h-full flex flex-col bg-cream border-r border-stone-300/50">
-      {/* Header with actions */}
-      <div className="flex-shrink-0 p-3 border-b border-stone-300/30">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-serif text-sm tracking-wide text-charcoal uppercase" style={{ letterSpacing: '0.08em' }}>
-            Rooms
-          </h2>
-          <span className="text-xs text-stone bg-cream-dark px-1.5 py-0.5 rounded">
-            {rooms.length}
-          </span>
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            onClick={onCreateRoom}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-cream bg-forest rounded-sm hover:bg-forest-light transition-colors duration-200"
-          >
-            <PlusIcon />
-            Create
-          </button>
-          <button
-            onClick={onBrowseRooms}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-charcoal bg-cream-dark rounded-sm hover:bg-stone-300/50 transition-colors duration-200 border border-stone-300/50"
-          >
-            <SearchIcon />
-            Browse
-          </button>
-        </div>
-      </div>
-
-      {/* Room list */}
+    <aside data-testid="room-sidebar" className="w-56 h-full flex flex-col bg-cream dark:bg-sand-900 border-r border-stone-300/50 dark:border-sand-700">
+      {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto py-2">
-        {isLoading ? (
-          <LoadingSkeleton />
-        ) : error ? (
-          <div className="px-4 py-8 text-center">
-            <p className="text-sm text-stone">Failed to load rooms</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-2 text-xs text-forest hover:underline"
-            >
-              Try again
-            </button>
-          </div>
-        ) : rooms.length === 0 ? (
-          <div className="px-4 py-8 text-center">
-            <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-cream-dark flex items-center justify-center">
-              <ChatBubbleIcon className="w-5 h-5 text-stone" />
+        {/* Rooms Section */}
+        <CollapsibleSection
+          title="Rooms"
+          count={rooms.length}
+          defaultOpen={true}
+          storageKey="rooms-section"
+          actions={roomActions}
+        >
+          {isLoadingRooms ? (
+            <LoadingSkeleton count={4} />
+          ) : roomsError ? (
+            <div className="px-4 py-4 text-center">
+              <p className="text-sm text-stone">Failed to load rooms</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-2 text-xs text-forest hover:underline"
+              >
+                Try again
+              </button>
             </div>
-            <p className="text-sm text-stone">No rooms yet</p>
-            <p className="text-xs text-stone/70 mt-1">Create or browse rooms to get started</p>
-          </div>
-        ) : (
-          <div className="space-y-0.5 px-2">
-            {sortedRooms.map((room) => (
-              <RoomItem
-                key={room.id}
-                room={room}
-                isActive={room.slug === currentRoomSlug}
-              />
-            ))}
-          </div>
-        )}
+          ) : rooms.length === 0 ? (
+            <EmptyState
+              icon={<ChatBubbleIcon className="w-5 h-5 text-stone" />}
+              title="No rooms yet"
+              subtitle="Create or browse rooms to get started"
+            />
+          ) : (
+            <div className="space-y-0.5 px-2">
+              {sortedRooms.map((room) => (
+                <RoomItem
+                  key={room.id}
+                  room={room}
+                  isActive={room.slug === currentRoomSlug}
+                />
+              ))}
+            </div>
+          )}
+        </CollapsibleSection>
+
+        {/* Direct Messages Section */}
+        <CollapsibleSection
+          title="Direct Messages"
+          count={dms.length}
+          defaultOpen={true}
+          storageKey="dms-section"
+          actions={dmActions}
+        >
+          {isLoadingDms ? (
+            <LoadingSkeleton count={3} />
+          ) : dmsError ? (
+            <div className="px-4 py-4 text-center">
+              <p className="text-sm text-stone">Failed to load messages</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-2 text-xs text-forest hover:underline"
+              >
+                Try again
+              </button>
+            </div>
+          ) : dms.length === 0 ? (
+            <EmptyState
+              icon={<ChatBubbleIcon className="w-5 h-5 text-stone" />}
+              title="No messages yet"
+              subtitle="Start a conversation"
+            />
+          ) : (
+            <div className="space-y-0.5 px-2">
+              {sortedDms.map((dm) => (
+                <DmItem
+                  key={dm.id}
+                  dm={dm}
+                  isActive={dm.slug === currentDmSlug}
+                />
+              ))}
+            </div>
+          )}
+        </CollapsibleSection>
       </div>
 
       {/* Footer hint */}
-      <div className="flex-shrink-0 px-4 py-3 border-t border-stone-300/30">
-        <p className="text-xs text-stone/60 text-center leading-relaxed">
-          Click a room to join the conversation
+      <div className="flex-shrink-0 px-4 py-3 border-t border-stone-300/30 dark:border-sand-700">
+        <p className="text-xs text-stone/60 dark:text-sand-500 text-center leading-relaxed">
+          Click to join the conversation
         </p>
       </div>
+
+      {/* New DM Modal */}
+      <NewDmModal
+        isOpen={isNewDmModalOpen}
+        onClose={() => setIsNewDmModalOpen(false)}
+        onDmCreated={handleDmCreated}
+      />
     </aside>
   );
 }

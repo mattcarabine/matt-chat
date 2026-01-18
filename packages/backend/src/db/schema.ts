@@ -85,6 +85,10 @@ export const rooms = sqliteTable('rooms', {
   isDefault: integer('isDefault', { mode: 'boolean' }).notNull().default(false),
   isPublic: integer('isPublic', { mode: 'boolean' }).notNull().default(true), // For future private rooms
   isE2e: integer('isE2e', { mode: 'boolean' }).notNull().default(false), // Marks E2E test rooms
+  // DM-related columns
+  isDm: integer('is_dm', { mode: 'boolean' }).notNull().default(false), // Whether this room is a direct message
+  dmType: text('dm_type', { enum: ['one_on_one', 'group'] }), // Type of DM (null for regular rooms)
+  ablyRoomId: text('ably_room_id'), // Decoupled Ably channel ID (preserves history when DM converts to room)
   createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull(),
 });

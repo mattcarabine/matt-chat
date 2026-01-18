@@ -125,11 +125,16 @@ export function ChatProvider({ children }: ChatProviderProps) {
 // Room-specific provider for multi-room support
 interface RoomProviderProps {
   roomId: string;
+  ablyRoomId?: string; // For Ably channel (if different from roomId, e.g., for DMs)
   children: React.ReactNode;
 }
 
-export function RoomProvider({ roomId, children }: RoomProviderProps) {
+export function RoomProvider({ roomId, ablyRoomId, children }: RoomProviderProps) {
   const { chatClient, isConnecting, connectionError } = useChatConnection();
+
+  // Use ablyRoomId for the channel name if provided, otherwise fall back to roomId
+  // This allows DMs to maintain their message history even when converted to rooms
+  const channelName = ablyRoomId || roomId;
 
   const roomOptions = useMemo(
     () => ({
@@ -160,7 +165,7 @@ export function RoomProvider({ roomId, children }: RoomProviderProps) {
   }
 
   return (
-    <AblyChatRoomProvider name={roomId} options={roomOptions}>
+    <AblyChatRoomProvider name={channelName} options={roomOptions}>
       {children}
     </AblyChatRoomProvider>
   );

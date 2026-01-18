@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, type ReactNode } from 'react';
 import type { UserPublicProfile } from '@app/shared';
 import { UserProfilePopover } from './UserProfilePopover';
+import { useSession } from '@/lib/auth-client';
 
 interface UserProfileTriggerProps {
   userId: string;
@@ -23,6 +24,8 @@ export function UserProfileTrigger({
 }: UserProfileTriggerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -68,6 +71,8 @@ export function UserProfileTrigger({
           isOnline={isOnline}
           placement={placement}
           onlineStatusSlot={onlineStatusSlot}
+          currentUserId={currentUserId}
+          onClose={() => setIsOpen(false)}
         />
       )}
     </div>

@@ -43,6 +43,13 @@
       "when": 1768479383276,
       "tag": "0005_quiet_living_mummy",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1768766082507,
+      "tag": "0006_early_sabra",
+      "breakpoints": true
     }
   ]
 }

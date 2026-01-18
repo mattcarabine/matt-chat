@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/providers/ThemeProvider';
 import { SignUpPage } from '@/pages/SignUpPage';
 import { SignInPage } from '@/pages/SignInPage';
 import { ChatPage } from '@/pages/ChatPage';
+import { DmPage } from '@/pages/DmPage';
 import { InvitationsPage } from '@/pages/InvitationsPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 
@@ -72,6 +73,14 @@ export function App() {
                 element={
                   <ProtectedRoute>
                     <ChatPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dm/:dmId"
+                element={
+                  <ProtectedRoute>
+                    <DmPage />
                   </ProtectedRoute>
                 }
               />

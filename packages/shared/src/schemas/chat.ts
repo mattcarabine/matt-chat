@@ -77,6 +77,17 @@ export const userSearchResultSchema = z.object({
 });
 export type UserSearchResult = z.infer<typeof userSearchResultSchema>;
 
+// User profile schema (for profile popover)
+export const userProfileSchema = z.object({
+  id: z.string(),
+  displayName: z.string(),
+  username: z.string().nullable(),
+  email: z.string(),
+  image: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type UserProfile = z.infer<typeof userProfileSchema>;
+
 // Display name preference
 export const displayNamePreferenceSchema = z.enum(['fullName', 'username']);
 export type DisplayNamePreference = z.infer<typeof displayNamePreferenceSchema>;

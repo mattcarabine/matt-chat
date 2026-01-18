@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import type { ChatMessage } from '@app/shared';
 import { MessageImages } from './MessageImages';
+import { UserProfilePopover } from '@/components/UserProfilePopover';
+import { useSession } from '@/lib/auth-client';
 
 // Placeholder used for image-only messages (Ably requires non-empty text)
 const IMAGE_ONLY_PLACEHOLDER = '\u200B';
@@ -11,7 +14,15 @@ interface MessageItemProps {
   roomSlug: string;
 }
 
+interface PopoverState {
+  userId: string;
+  anchorRect: DOMRect;
+}
+
 export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageItemProps) {
+  const { data: session } = useSession();
+  const [popoverState, setPopoverState] = useState<PopoverState | null>(null);
+
   const displayName = message.metadata?.displayName || 'Anonymous';
   const timestamp = new Date(message.timestamp);
   const timeString = timestamp.toLocaleTimeString([], {
@@ -24,6 +35,22 @@ export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageIte
   const hasText = textContent && textContent.trim().length > 0;
   const hasImages = images && images.length > 0;
 
+  const messageUserId = message.metadata?.userId;
+  const currentUserId = session?.user?.id;
+  // Only allow clicking on other users' messages (not own messages)
+  const canShowPopover = messageUserId && messageUserId !== currentUserId;
+
+  const handleSenderClick = (event: React.MouseEvent<HTMLElement>) => {
+    if (!canShowPopover || !messageUserId) return;
+    event.stopPropagation();
+    const rect = event.currentTarget.getBoundingClientRect();
+    setPopoverState({ userId: messageUserId, anchorRect: rect });
+  };
+
+  const handleClosePopover = () => {
+    setPopoverState(null);
+  };
+
   return (
     <div className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`} data-testid="message-item">
       {/* Avatar */}
@@ -31,7 +58,9 @@ export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageIte
         <div
           className={`w-10 h-10 rounded-full flex items-center justify-center text-cream font-serif text-lg ${
             isOwn ? 'bg-forest' : 'bg-terracotta'
-          }`}
+          } ${canShowPopover ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+          onClick={handleSenderClick}
+          data-testid={canShowPopover ? 'message-sender-clickable' : undefined}
         >
           {displayName.charAt(0).toUpperCase()}
         </div>
@@ -45,7 +74,13 @@ export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageIte
           <div
             className={`flex items-center gap-2 mb-1 ${isOwn ? 'flex-row-reverse' : ''}`}
           >
-            <span className="text-sm font-medium text-charcoal" data-testid="message-sender">
+            <span
+              className={`text-sm font-medium text-charcoal ${
+                canShowPopover ? 'cursor-pointer hover:text-ember-600 dark:hover:text-ember-400 transition-colors' : ''
+              }`}
+              onClick={handleSenderClick}
+              data-testid="message-sender"
+            >
               {displayName}
             </span>
             <span className="text-xs text-stone-400">{timeString}</span>
@@ -72,6 +107,15 @@ export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageIte
           <MessageImages images={images} roomSlug={roomSlug} />
         )}
       </div>
+
+      {/* User Profile Popover */}
+      {popoverState && (
+        <UserProfilePopover
+          userId={popoverState.userId}
+          anchorRect={popoverState.anchorRect}
+          onClose={handleClosePopover}
+        />
+      )}
     </div>
   );
 }

@@ -79,3 +79,56 @@ usersRoutes.get('/search', async (c) => {
     })),
   });
 });
+
+// Dynamic route must come after all specific routes (/me/chat-info, /search)
+usersRoutes.get('/:id', async (c) => {
+  const userId = c.req.param('id');
+  const isE2eMode = getCookie(c, 'e2e_mode') === 'true';
+
+  // Build conditions for query
+  const conditions = [eq(user.id, userId)];
+
+  // Filter out E2E test users in production mode
+  if (!isE2eMode) {
+    conditions.push(not(like(user.email, '%@e2e-test.local')));
+  }
+
+  const foundUser = await db
+    .select({
+      id: user.id,
+      fullName: user.fullName,
+      name: user.name,
+      username: user.username,
+      displayUsername: user.displayUsername,
+      email: user.email,
+      image: user.image,
+      createdAt: user.createdAt,
+    })
+    .from(user)
+    .where(and(...conditions))
+    .get();
+
+  if (!foundUser) {
+    return c.json({ error: 'User not found' }, 404);
+  }
+
+  // Get user's display name preference
+  const prefs = await db.query.userPreferences.findFirst({
+    where: eq(userPreferences.userId, userId),
+  });
+
+  const preference = prefs?.displayNamePreference ?? 'fullName';
+  const displayName =
+    preference === 'username'
+      ? foundUser.displayUsername || foundUser.username || foundUser.fullName
+      : foundUser.fullName;
+
+  return c.json({
+    id: foundUser.id,
+    displayName,
+    username: foundUser.displayUsername || foundUser.username,
+    email: foundUser.email,
+    image: foundUser.image,
+    createdAt: foundUser.createdAt.toISOString(),
+  });
+});

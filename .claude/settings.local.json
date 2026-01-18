@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/Users/matt/.claude/plugins/cache/colony-plugins/colony/1.0.0/bin/colony state init:*)",
+      "Bash(/Users/matt/.claude/plugins/cache/colony-plugins/colony/1.0.0/bin/colony state set:*)",
+      "Bash(/Users/matt/.claude/plugins/cache/colony-plugins/colony/1.0.0/bin/colony state list:*)"
+    ]
+  }
+}

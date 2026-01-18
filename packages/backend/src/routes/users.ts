@@ -79,3 +79,34 @@ usersRoutes.get('/search', async (c) => {
     })),
   });
 });
+
+usersRoutes.get('/:id', async (c) => {
+  const userId = c.req.param('id');
+
+  const foundUser = await db.query.user.findFirst({
+    where: eq(user.id, userId),
+  });
+
+  if (!foundUser) {
+    return c.json({ error: 'User not found' }, 404);
+  }
+
+  const prefs = await db.query.userPreferences.findFirst({
+    where: eq(userPreferences.userId, userId),
+  });
+
+  const preference = prefs?.displayNamePreference ?? 'fullName';
+  const displayName =
+    preference === 'username'
+      ? foundUser.displayUsername || foundUser.username || foundUser.fullName
+      : foundUser.fullName;
+
+  return c.json({
+    user: {
+      id: foundUser.id,
+      displayName,
+      username: foundUser.displayUsername || foundUser.username || null,
+      createdAt: foundUser.createdAt.toISOString(),
+    },
+  });
+});

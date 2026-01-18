@@ -1,12 +1,18 @@
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { UserProfileTrigger } from './UserProfileTrigger';
+
 interface PresenceItemProps {
+  userId: string;
   displayName: string;
   isCurrentUser: boolean;
   isOnline?: boolean;
 }
 
-export function PresenceItem({ displayName, isCurrentUser, isOnline = true }: PresenceItemProps) {
-  return (
-    <div className={`flex items-center gap-3 py-2 ${!isOnline ? 'opacity-50' : ''}`} data-testid="presence-item">
+export function PresenceItem({ userId, displayName, isCurrentUser, isOnline = true }: PresenceItemProps) {
+  const { data: profileData } = useUserProfile(userId);
+
+  const avatarAndName = (
+    <div className="flex items-center gap-3">
       <div className="relative">
         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-serif ${
           isOnline ? 'bg-forest text-cream' : 'bg-stone-300 text-stone'
@@ -27,6 +33,19 @@ export function PresenceItem({ displayName, isCurrentUser, isOnline = true }: Pr
         {displayName}
         {isCurrentUser && <span className="text-stone-400 ml-1">(you)</span>}
       </span>
+    </div>
+  );
+
+  return (
+    <div className={`py-2 ${!isOnline ? 'opacity-50' : ''}`} data-testid="presence-item">
+      <UserProfileTrigger
+        userId={userId}
+        user={profileData?.user}
+        isOnline={isOnline}
+        placement="left"
+      >
+        {avatarAndName}
+      </UserProfileTrigger>
     </div>
   );
 }

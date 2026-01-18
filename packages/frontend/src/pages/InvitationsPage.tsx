@@ -2,7 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NavBar } from '@/components/layout/NavBar';
 import { useInvitations, useInvitationMutations } from '@/hooks/useInvitations';
+import { UserProfilePopover } from '@/components/UserProfilePopover';
 import type { RoomInvitation } from '@app/shared';
+
+interface PopoverState {
+  userId: string;
+  anchorRect: DOMRect;
+}
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -27,14 +33,21 @@ function InvitationCard({
   onDecline,
   isAccepting,
   isDeclining,
+  onInviterClick,
 }: {
   invitation: RoomInvitation;
   onAccept: () => void;
   onDecline: () => void;
   isAccepting: boolean;
   isDeclining: boolean;
+  onInviterClick: (userId: string, anchorRect: DOMRect) => void;
 }) {
   const isLoading = isAccepting || isDeclining;
+
+  const handleInviterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    onInviterClick(invitation.inviterId, rect);
+  };
 
   return (
     <div className="p-4 bg-cream-dark/50 rounded-sm border border-stone-300/30">
@@ -42,7 +55,15 @@ function InvitationCard({
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-charcoal truncate">{invitation.roomName}</h3>
           <p className="text-sm text-stone mt-1">
-            Invited by <span className="text-charcoal">{invitation.inviterName}</span>
+            Invited by{' '}
+            <button
+              type="button"
+              onClick={handleInviterClick}
+              className="text-charcoal hover:text-ember-600 hover:underline cursor-pointer transition-colors"
+              data-testid="invitation-inviter-clickable"
+            >
+              {invitation.inviterName}
+            </button>
           </p>
           <p className="text-xs text-stone/70 mt-1">{formatDate(invitation.createdAt)}</p>
         </div>
@@ -85,6 +106,15 @@ export function InvitationsPage() {
   const { data, isLoading, error } = useInvitations();
   const { acceptInvitation, declineInvitation } = useInvitationMutations();
   const [processing, setProcessing] = useState<ProcessingState | null>(null);
+  const [popoverState, setPopoverState] = useState<PopoverState | null>(null);
+
+  const handleInviterClick = (userId: string, anchorRect: DOMRect) => {
+    setPopoverState({ userId, anchorRect });
+  };
+
+  const handleClosePopover = () => {
+    setPopoverState(null);
+  };
 
   const handleAccept = async (invitation: RoomInvitation) => {
     setProcessing({ id: invitation.id, action: 'accept' });
@@ -154,11 +184,21 @@ export function InvitationsPage() {
                 onDecline={() => handleDecline(invitation)}
                 isAccepting={processing?.id === invitation.id && processing?.action === 'accept'}
                 isDeclining={processing?.id === invitation.id && processing?.action === 'decline'}
+                onInviterClick={handleInviterClick}
               />
             ))}
           </div>
         )}
       </main>
+
+      {/* User Profile Popover */}
+      {popoverState && (
+        <UserProfilePopover
+          userId={popoverState.userId}
+          anchorRect={popoverState.anchorRect}
+          onClose={handleClosePopover}
+        />
+      )}
     </div>
   );
 }

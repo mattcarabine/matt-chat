@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useUserSearch } from '@/hooks/useUserSearch';
 import { useRoomMutations } from '@/hooks/useRooms';
+import { UserProfilePopover } from '@/components/UserProfilePopover';
 import type { UserSearchResult } from '@app/shared';
 
 interface InviteUserModalProps {
@@ -38,11 +39,13 @@ function getInviteButtonLabel(isInviting: boolean, isInvited: boolean): React.Re
 function UserSearchResultItem({
   user,
   onInvite,
+  onAvatarClick,
   isInviting,
   isInvited,
 }: {
   user: UserSearchResult;
   onInvite: () => void;
+  onAvatarClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
   isInviting: boolean;
   isInvited: boolean;
 }) {
@@ -53,9 +56,15 @@ function UserSearchResultItem({
   return (
     <div className="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-sand-100 dark:hover:bg-sand-800/50 rounded-lg">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-8 h-8 rounded-full bg-ember-50 dark:bg-ember-500/10 flex items-center justify-center flex-shrink-0">
+        <button
+          type="button"
+          data-testid={`invite-user-profile-trigger-${user.id}`}
+          onClick={onAvatarClick}
+          className="w-8 h-8 rounded-full bg-ember-50 dark:bg-ember-500/10 flex items-center justify-center flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-ember-500/50 transition-all"
+          aria-label={`View ${user.displayName}'s profile`}
+        >
           <UserIcon className="w-4 h-4 text-ember-500 dark:text-ember-400" />
-        </div>
+        </button>
         <div className="min-w-0">
           <p className="text-sm font-medium text-sand-900 dark:text-sand-50 truncate">
             {user.displayName}
@@ -77,11 +86,17 @@ function UserSearchResultItem({
   );
 }
 
+interface PopoverState {
+  userId: string;
+  anchorRect: DOMRect;
+}
+
 export function InviteUserModal({ isOpen, onClose, roomSlug }: InviteUserModalProps) {
   const [query, setQuery] = useState('');
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [invitingId, setInvitingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [popover, setPopover] = useState<PopoverState | null>(null);
 
   const { data: searchResults, isLoading: isSearching } = useUserSearch(query);
   const { inviteToRoom } = useRoomMutations();
@@ -92,7 +107,17 @@ export function InviteUserModal({ isOpen, onClose, roomSlug }: InviteUserModalPr
     setQuery('');
     setInvitedIds(new Set());
     setError(null);
+    setPopover(null);
     onClose();
+  };
+
+  const handleAvatarClick = (user: UserSearchResult, event: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setPopover({ userId: user.id, anchorRect: rect });
+  };
+
+  const handleClosePopover = () => {
+    setPopover(null);
   };
 
   const handleInvite = async (user: UserSearchResult) => {
@@ -174,6 +199,7 @@ export function InviteUserModal({ isOpen, onClose, roomSlug }: InviteUserModalPr
                   key={user.id}
                   user={user}
                   onInvite={() => handleInvite(user)}
+                  onAvatarClick={(e) => handleAvatarClick(user, e)}
                   isInviting={invitingId === user.id}
                   isInvited={invitedIds.has(user.id)}
                 />
@@ -194,6 +220,15 @@ export function InviteUserModal({ isOpen, onClose, roomSlug }: InviteUserModalPr
           </button>
         </div>
       </div>
+
+      {/* User Profile Popover */}
+      {popover && (
+        <UserProfilePopover
+          userId={popover.userId}
+          anchorRect={popover.anchorRect}
+          onClose={handleClosePopover}
+        />
+      )}
     </div>
   );
 }

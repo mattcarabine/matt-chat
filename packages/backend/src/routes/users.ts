@@ -79,3 +79,47 @@ usersRoutes.get('/search', async (c) => {
     })),
   });
 });
+
+usersRoutes.get('/:userId', async (c) => {
+  const session = c.get('session');
+  const userId = c.req.param('userId');
+  const isE2eMode = getCookie(c, 'e2e_mode') === 'true';
+
+  const targetUser = await db.query.user.findFirst({
+    where: eq(user.id, userId),
+  });
+
+  if (!targetUser) {
+    return c.json({ error: 'User not found' }, 404);
+  }
+
+  // Filter out E2E test users in production mode
+  const isE2eTestUser = targetUser.email.endsWith('@e2e-test.local');
+  if (isE2eTestUser && !isE2eMode) {
+    return c.json({ error: 'User not found' }, 404);
+  }
+
+  const prefs = await db.query.userPreferences.findFirst({
+    where: eq(userPreferences.userId, userId),
+  });
+
+  const preference = prefs?.displayNamePreference ?? 'fullName';
+  const resolvedUsername = targetUser.displayUsername || targetUser.username || null;
+  const displayName =
+    preference === 'username' && resolvedUsername
+      ? resolvedUsername
+      : targetUser.fullName;
+
+  // Only include email if the user is viewing their own profile
+  const isOwnProfile = session.user.id === userId;
+
+  return c.json({
+    id: targetUser.id,
+    displayName,
+    fullName: targetUser.fullName,
+    username: resolvedUsername,
+    email: isOwnProfile ? targetUser.email : null,
+    memberSince: targetUser.createdAt.toISOString(),
+    displayNamePreference: preference,
+  });
+});

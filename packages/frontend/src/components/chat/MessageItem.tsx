@@ -1,5 +1,10 @@
+import { useState, useCallback } from 'react';
 import type { ChatMessage } from '@app/shared';
 import { MessageImages } from './MessageImages';
+import { UserProfilePopover } from './UserProfilePopover';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useChatPresence } from '@/hooks/useChat';
+import { useSession } from '@/lib/auth-client';
 
 // Placeholder used for image-only messages (Ably requires non-empty text)
 const IMAGE_ONLY_PLACEHOLDER = '\u200B';
@@ -11,8 +16,18 @@ interface MessageItemProps {
   roomSlug: string;
 }
 
+interface PopoverState {
+  userId: string;
+  anchorRect: DOMRect;
+}
+
 export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageItemProps) {
+  const [popoverState, setPopoverState] = useState<PopoverState | null>(null);
+  const { data: session } = useSession();
+  const { users: onlineUsers } = useChatPresence();
+
   const displayName = message.metadata?.displayName || 'Anonymous';
+  const messageUserId = message.metadata?.userId;
   const timestamp = new Date(message.timestamp);
   const timeString = timestamp.toLocaleTimeString([], {
     hour: '2-digit',
@@ -24,17 +39,47 @@ export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageIte
   const hasText = textContent && textContent.trim().length > 0;
   const hasImages = images && images.length > 0;
 
+  // Fetch user profile when popover is open
+  const { user: profileUser } = useUserProfile(popoverState?.userId ?? null, {
+    enabled: !!popoverState,
+  });
+
+  // Check if user is online based on presence data
+  const isOnline = messageUserId
+    ? onlineUsers.some((u) => u.userId === messageUserId)
+    : false;
+
+  // Check if this is the current user
+  const isCurrentUser = messageUserId === session?.user?.id;
+
+  const handleProfileClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (!messageUserId) return;
+      const rect = event.currentTarget.getBoundingClientRect();
+      setPopoverState({ userId: messageUserId, anchorRect: rect });
+    },
+    [messageUserId]
+  );
+
+  const handleClosePopover = useCallback(() => {
+    setPopoverState(null);
+  }, []);
+
   return (
     <div className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`} data-testid="message-item">
       {/* Avatar */}
       <div className={`flex-shrink-0 ${showAvatar ? '' : 'invisible'}`}>
-        <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center text-cream font-serif text-lg ${
+        <button
+          type="button"
+          onClick={handleProfileClick}
+          className={`w-10 h-10 rounded-full flex items-center justify-center text-cream font-serif text-lg cursor-pointer transition-opacity hover:opacity-80 ${
             isOwn ? 'bg-forest' : 'bg-terracotta'
           }`}
+          data-testid={`message-avatar-${messageUserId}`}
+          aria-label={`View ${displayName}'s profile`}
         >
           {displayName.charAt(0).toUpperCase()}
-        </div>
+        </button>
       </div>
 
       {/* Message content */}
@@ -45,9 +90,14 @@ export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageIte
           <div
             className={`flex items-center gap-2 mb-1 ${isOwn ? 'flex-row-reverse' : ''}`}
           >
-            <span className="text-sm font-medium text-charcoal" data-testid="message-sender">
+            <button
+              type="button"
+              onClick={handleProfileClick}
+              className="text-sm font-medium text-charcoal cursor-pointer hover:underline"
+              data-testid={`message-name-${messageUserId}`}
+            >
               {displayName}
-            </span>
+            </button>
             <span className="text-xs text-stone-400">{timeString}</span>
           </div>
         )}
@@ -72,6 +122,23 @@ export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageIte
           <MessageImages images={images} roomSlug={roomSlug} />
         )}
       </div>
+
+      {/* Profile Popover */}
+      {popoverState && profileUser && (
+        <UserProfilePopover
+          user={{
+            id: profileUser.id,
+            displayName: profileUser.displayName,
+            username: profileUser.username ?? undefined,
+            email: isCurrentUser ? (profileUser.email ?? undefined) : undefined,
+            memberSince: new Date(profileUser.memberSince),
+          }}
+          isOnline={isOnline}
+          isCurrentUser={isCurrentUser}
+          anchorRect={popoverState.anchorRect}
+          onClose={handleClosePopover}
+        />
+      )}
     </div>
   );
 }

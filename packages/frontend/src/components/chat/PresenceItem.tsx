@@ -1,10 +1,13 @@
+import { ClickableUsername } from '../ClickableUsername';
+
 interface PresenceItemProps {
+  userId: string;
   displayName: string;
   isCurrentUser: boolean;
   isOnline?: boolean;
 }
 
-export function PresenceItem({ displayName, isCurrentUser, isOnline = true }: PresenceItemProps) {
+export function PresenceItem({ userId, displayName, isCurrentUser, isOnline = true }: PresenceItemProps) {
   return (
     <div className={`flex items-center gap-3 py-2 ${!isOnline ? 'opacity-50' : ''}`} data-testid="presence-item">
       <div className="relative">
@@ -24,7 +27,9 @@ export function PresenceItem({ displayName, isCurrentUser, isOnline = true }: Pr
         className={`text-sm ${isCurrentUser ? 'font-medium text-charcoal' : 'text-stone'}`}
         data-testid="presence-name"
       >
-        {displayName}
+        <ClickableUsername userId={userId} displayName={displayName} isOnline={isOnline}>
+          {displayName}
+        </ClickableUsername>
         {isCurrentUser && <span className="text-stone-400 ml-1">(you)</span>}
       </span>
     </div>

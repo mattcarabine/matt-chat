@@ -1,9 +1,11 @@
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useSession, type User } from '@/lib/auth-client';
 import { NavBar } from '@/components/layout/NavBar';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useUserProfile, useUpdateBio } from '@/hooks/useUserProfile';
 import { useTheme } from '@/providers/ThemeProvider';
-import { UserIcon, SettingsIcon, SpinnerIcon } from '@/components/icons';
+import { UserIcon, SettingsIcon, SpinnerIcon, CheckIcon } from '@/components/icons';
 
 function SunIcon({ className = 'w-4 h-4' }: { className?: string }): JSX.Element {
   return (
@@ -98,6 +100,101 @@ function ProfileField({ label, value, hint, type = 'text' }: ProfileFieldProps):
   );
 }
 
+const BIO_MAX_LENGTH = 160;
+
+function BioSection(): JSX.Element {
+  const { data: session } = useSession();
+  const userId = session?.user?.id || null;
+  const { data: profileData } = useUserProfile(userId);
+  const updateBioMutation = useUpdateBio();
+
+  const [bio, setBio] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  useEffect(() => {
+    if (profileData?.bio !== undefined) {
+      setBio(profileData.bio || '');
+    }
+  }, [profileData?.bio]);
+
+  const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    if (value.length <= BIO_MAX_LENGTH) {
+      setBio(value);
+      setShowSuccess(false);
+    }
+  };
+
+  const handleSaveBio = () => {
+    const bioToSave = bio.trim() || null;
+    updateBioMutation.mutate(bioToSave, {
+      onSuccess: () => {
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+      },
+    });
+  };
+
+  const hasChanges = (profileData?.bio || '') !== bio;
+
+  return (
+    <div data-testid="settings-bio-section">
+      <div className="mb-4">
+        <h2 className="font-serif text-2xl text-charcoal dark:text-sand-50 mb-2">Bio</h2>
+        <p className="text-stone dark:text-sand-400">Tell others about yourself.</p>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <textarea
+            value={bio}
+            onChange={handleBioChange}
+            placeholder="Tell others about yourself..."
+            maxLength={BIO_MAX_LENGTH}
+            rows={3}
+            className="w-full px-4 py-3 border border-sand-200 dark:border-sand-700 rounded-lg bg-white dark:bg-sand-900 text-charcoal dark:text-sand-50 placeholder-sand-400 focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent resize-none"
+            data-testid="settings-bio-textarea"
+          />
+          <div className="flex justify-between items-center mt-2">
+            <span className="text-sm text-stone dark:text-sand-400" data-testid="settings-bio-char-count">
+              {bio.length}/{BIO_MAX_LENGTH}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleSaveBio}
+            disabled={updateBioMutation.isPending || !hasChanges}
+            className="px-4 py-2 bg-ember-500 text-white rounded-lg font-medium hover:bg-ember-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            data-testid="settings-bio-save-button"
+          >
+            {updateBioMutation.isPending ? (
+              <>
+                <SpinnerIcon className="w-4 h-4" />
+                Saving...
+              </>
+            ) : (
+              'Save Bio'
+            )}
+          </button>
+          {showSuccess && (
+            <span className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1" data-testid="settings-bio-success">
+              <CheckIcon className="w-4 h-4" />
+              Saved!
+            </span>
+          )}
+          {updateBioMutation.isError && (
+            <span className="text-sm text-red-600 dark:text-red-400" data-testid="settings-bio-error">
+              Failed to save. Please try again.
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SettingsTab(): JSX.Element {
   const { data: session } = useSession();
   const { preferences, updatePreference, isUpdating } = useUserPreferences();
@@ -148,6 +245,9 @@ function SettingsTab(): JSX.Element {
           </p>
         )}
       </div>
+
+      {/* Bio Section */}
+      <BioSection />
 
       {/* Theme Section */}
       <div>

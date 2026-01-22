@@ -157,7 +157,7 @@ test.describe('Private Rooms', () => {
       // Second user declines
       await page2.click('text=Invitations');
       await expect(page2.locator(`text=Decline Test ${id}`)).toBeVisible();
-      await page2.click('button:has-text("Decline")');
+      await page2.getByTestId('invitation-decline-button').click();
 
       // Invitation should disappear
       await expect(page2.locator(`text=Decline Test ${id}`)).not.toBeVisible();

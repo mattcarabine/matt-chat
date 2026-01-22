@@ -13,8 +13,9 @@ export const user = sqliteTable('user', {
   // Username plugin fields
   username: text('username').unique(),
   displayUsername: text('displayUsername'),
-  // Custom field
+  // Custom fields
   fullName: text('fullName').notNull(),
+  bio: text('bio'), // Optional bio, max 160 chars enforced at API level
 });
 
 // Session table - BetterAuth core

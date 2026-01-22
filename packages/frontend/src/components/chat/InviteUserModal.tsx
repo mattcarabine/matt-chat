@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useUserSearch } from '@/hooks/useUserSearch';
 import { useRoomMutations } from '@/hooks/useRooms';
+import { ClickableUsername } from '@/components/ClickableUsername';
 import type { UserSearchResult } from '@app/shared';
 
 interface InviteUserModalProps {
@@ -58,7 +59,10 @@ function UserSearchResultItem({
         </div>
         <div className="min-w-0">
           <p className="text-sm font-medium text-sand-900 dark:text-sand-50 truncate">
-            {user.displayName}
+            <ClickableUsername
+              userId={user.id}
+              displayName={user.displayName}
+            />
           </p>
           {user.username && (
             <p className="text-xs text-sand-500 dark:text-sand-400 truncate">@{user.username}</p>

@@ -149,3 +149,26 @@ export const ROOM_DISPLAY_NAMES: Record<RoomId, string> = {
 export function isValidRoomId(roomId: string): roomId is RoomId {
   return Object.values(ROOMS).includes(roomId as RoomId);
 }
+
+// ========================================
+// User Profile Schemas
+// ========================================
+
+// User profile schema for GET /api/users/:id/profile response
+export const userProfileSchema = z.object({
+  id: z.string(),
+  displayName: z.string().nullable(),
+  username: z.string(),
+  bio: z.string().nullable(),
+  createdAt: z.string(), // ISO date string
+  sharedRoomsCount: z.number(),
+});
+
+export type UserProfile = z.infer<typeof userProfileSchema>;
+
+// Input schema for PUT /api/users/me/bio
+export const updateBioInputSchema = z.object({
+  bio: z.string().max(160).nullable(),
+});
+
+export type UpdateBioInput = z.infer<typeof updateBioInputSchema>;

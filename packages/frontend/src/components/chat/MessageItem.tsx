@@ -1,4 +1,5 @@
 import type { ChatMessage } from '@app/shared';
+import { ClickableUsername } from '../ClickableUsername';
 import { MessageImages } from './MessageImages';
 
 // Placeholder used for image-only messages (Ably requires non-empty text)
@@ -45,9 +46,19 @@ export function MessageItem({ message, isOwn, showAvatar, roomSlug }: MessageIte
           <div
             className={`flex items-center gap-2 mb-1 ${isOwn ? 'flex-row-reverse' : ''}`}
           >
-            <span className="text-sm font-medium text-charcoal" data-testid="message-sender">
-              {displayName}
-            </span>
+            {message.metadata?.userId ? (
+              <ClickableUsername
+                userId={message.metadata.userId}
+                displayName={displayName}
+                className="text-sm font-medium text-charcoal"
+              >
+                <span data-testid="message-sender">{displayName}</span>
+              </ClickableUsername>
+            ) : (
+              <span className="text-sm font-medium text-charcoal" data-testid="message-sender">
+                {displayName}
+              </span>
+            )}
             <span className="text-xs text-stone-400">{timeString}</span>
           </div>
         )}

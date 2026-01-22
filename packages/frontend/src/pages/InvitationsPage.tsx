@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NavBar } from '@/components/layout/NavBar';
+import { ClickableUsername } from '@/components/ClickableUsername';
 import { useInvitations, useInvitationMutations } from '@/hooks/useInvitations';
 import type { RoomInvitation } from '@app/shared';
 
@@ -42,7 +43,12 @@ function InvitationCard({
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-charcoal truncate">{invitation.roomName}</h3>
           <p className="text-sm text-stone mt-1">
-            Invited by <span className="text-charcoal">{invitation.inviterName}</span>
+            Invited by{' '}
+            <ClickableUsername
+              userId={invitation.inviterId}
+              displayName={invitation.inviterName}
+              className="text-charcoal"
+            />
           </p>
           <p className="text-xs text-stone/70 mt-1">{formatDate(invitation.createdAt)}</p>
         </div>
@@ -50,6 +56,7 @@ function InvitationCard({
           <button
             onClick={onDecline}
             disabled={isLoading}
+            data-testid="invitation-decline-button"
             className="px-3 py-1.5 text-sm text-stone hover:text-charcoal border border-stone-300/50 rounded-sm transition-colors disabled:opacity-50"
           >
             {isDeclining ? (
